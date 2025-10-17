@@ -1,0 +1,9 @@
+fastapi
+uvicorn
+pydantic>=2
+SQLAlchemy>=2.0
+httpx
+PyYAML
+Jinja2
+numpy
+pandas

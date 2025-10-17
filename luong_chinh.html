@@ -1,0 +1,60 @@
+<!DOCTYPE html><html lang='vi'><head><meta charset='UTF-8'><meta name='viewport' content='width=device-width, initial-scale=1.0'><title>Luong hoat dong chinh co Fewshot</title>
+<style>
+  body { font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial; margin: 24px; line-height: 1.55; }
+  h1,h2 { margin: 0 0 12px 0; }
+  .note { background:#f6f8fa; border:1px solid #e5e7eb; padding:12px 16px; border-radius:10px; margin-bottom:16px;}
+  .mermaid { margin: 20px 0; }
+  ol, ul { margin-top: 8px; }
+  code { background:#f6f8fa; padding:2px 5px; border-radius:4px; }
+</style>
+
+<script type="module">
+  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";
+  mermaid.initialize({ startOnLoad: true, securityLevel: "loose" });
+</script>
+</head><body><h2>Luong hoat dong chinh co Fewshot</h2><div class='note'>Sơ đồ dùng MermaidJS từ CDN. Nếu không hiện hình, hãy kiểm tra kết nối internet và nhấn <b>Ctrl+F5</b> để tải lại.</div><div class='mermaid'>
+flowchart TD
+  MSG[incoming message] --> PKI[prompt pack intent system guardrails fewshot]
+  PKI --> DET[detect intent]
+  DET -->|greeting| FIX[fixed greeting reply] --> END1[end]
+  DET -->|not greeting| ORCH[orchestrator]
+  ORCH --> REDIS[redis session]
+  ORCH --> VALID[validator]
+  VALID --> DEC{enough data}
+  DEC -->|no| ASK[ask missing fields] --> ORCH
+  DEC -->|yes| FEAT[feature builder] --> SCORE[score api]
+  SCORE --> MODEL[tabular model]
+  MODEL --> SHAP[shap topk]
+  SCORE --> PKE[prompt pack explain system fewshot]
+  PKE --> LLM[llm explainer]
+  LLM --> REPLY[final reply to user] --> END2[end]
+  SCORE --> WH[warehouse log]
+  SCORE --> MON[monitoring]
+  MODEL --> REG[model registry or config]
+  BATCH[batch scoring job] --> FEAT
+
+</div><hr/>
+<h3>Giai thich chi tiet</h3>
+<ol>
+  <li><b>incoming message</b>: Nhan tin tu nguoi dung kem session id.</li>
+  <li><b>prompt pack intent</b>: System prompt + guardrails + fewshot vi du de nhan biet greeting hay khong.</li>
+  <li><b>detect intent</b>: Phan loai ket qua intent. Neu la greeting di vao nhanh greeting.</li>
+  <li><b>fixed greeting reply</b>: Tra cau chao mac dinh. Khong goi mo hinh. Ket thuc nhanh nay.</li>
+  <li><b>orchestrator</b>: Dieu phoi toan bo dong chay doc ghi redis goi validator score api llm ghep ket qua.</li>
+  <li><b>redis session</b>: Luu context fields consent history tom tat last step ttl 24 48h.</li>
+  <li><b>validator</b>: Kiem tra kieu du lieu gia tri hop le va logic dac biet vi du pdays bang tru mot.</li>
+  <li><b>enough data</b>: Nut quyet dinh. Neu chua du thi hoi bo sung neu du thi build feature.</li>
+  <li><b>ask missing fields</b>: Tao toi da 1 2 cau hoi moi luot cap nhat redis.</li>
+  <li><b>feature builder</b>: Encode categorical scale numeric xu ly gia tri dac biet tao dac trung don gian.</li>
+  <li><b>score api</b>: Endpoint dong bo nhan features tra score class va top features tu shap muc tieu p95 duoi 200ms.</li>
+  <li><b>tabular model</b>: XGBoost LightGBM hoac Logistic la nguon diem chinh.</li>
+  <li><b>shap topk</b>: Tinh dong gop dac trung top k de giai thich.</li>
+  <li><b>prompt pack explain</b>: Fewshot mau de tao giai thich ngan gon va next best action nhat quan.</li>
+  <li><b>llm explainer</b>: Sinh doan giai thich than thien nguoi doc tu score va top features.</li>
+  <li><b>final reply to user</b>: Ket hop score giai thich va de xuat gui lai nguoi dung.</li>
+  <li><b>warehouse log</b>: Luu record cho audit va ab test.</li>
+  <li><b>monitoring</b>: Day latency error va theo doi drift chat luong du lieu.</li>
+  <li><b>model registry or config</b>: Luu ten va phien ban model tabular va llm qua yaml git hoac mlflow.</li>
+  <li><b>batch scoring job</b>: Chay theo lich de cham diem hang loat tai su dung buoc feature builder.</li>
+</ol>
+</body></html>

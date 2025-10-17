@@ -1,0 +1,8 @@
+- input:
+    duration: 320
+    campaign: 1
+  output: "score≈85, rationale='call long & few contacts', contrib={'duration':0.4,'campaign':0.3}"
+- input:
+    default: 1
+    loan: 1
+  output: "score≈40, rationale='risk: default+loan', contrib={'default':-0.5,'loan':-0.3}"

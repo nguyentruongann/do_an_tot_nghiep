@@ -1,0 +1,24 @@
+app:
+  db_path: "do_an.db"
+  model_version: "llm-v1"
+  enable_llm_explainer: false
+  fallback_rule_if_llm_fails: true
+
+model_registry:
+  llm-v1:
+    kind: "llm"
+    endpoint: "http://localhost:8001/generate"  # your FastAPI LLM endpoint
+    request_key: "prompt"                        # body = {"prompt": "...", "model": "<optional>"}
+    headers:
+      Authorization: ""
+    model: ""
+
+  remote-tabular-v1:
+    kind: "remote"
+    endpoint: "http://localhost:9000/predict"
+    method: "POST"
+    headers: {}
+    request_key: "features"
+    response_score_key: "score"
+    score_scale: "0-100"
+    response_contrib_key: ""
