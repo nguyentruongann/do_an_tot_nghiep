@@ -1,0 +1,12 @@
+llm:
+  model: "/app/models/gemma-3-27b-it"
+  temperature: 0.0
+  base_url: "http://175.155.64.145:19005/v1/"
+  api_key: "sk"
+
+server:
+  host: "0.0.0.0"
+  port: 8080
+
+storage:
+  sqlite_path: "/app/data/warehouse.db"

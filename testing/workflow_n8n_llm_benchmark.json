@@ -1,0 +1,227 @@
+{
+  "name": "LLM Benchmark – Local CSV in/out",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "Manual Trigger",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        200,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "return [{config:{models:[{ name:'Gemma-27B-IT', base_url:'http://175.155.64.145:19005/v1', model:'/app/models/gemma-3-27b-it', api_key:'sk'}]}}];"
+      },
+      "id": "Init",
+      "name": "Init",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 2,
+      "position": [
+        420,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "filePath": "/data/prompts_50.csv"
+      },
+      "id": "ReadCSV",
+      "name": "Read CSV",
+      "type": "n8n-nodes-base.readBinaryFile",
+      "typeVersion": 1,
+      "position": [
+        650,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "fromBinary",
+        "binaryPropertyName": "data",
+        "options": {
+          "headerRow": true
+        }
+      },
+      "id": "ParseCSV",
+      "name": "Parse CSV",
+      "type": "n8n-nodes-base.spreadsheetFile",
+      "typeVersion": 3,
+      "position": [
+        860,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "batchSize": 1
+      },
+      "id": "SplitPrompts",
+      "name": "Split In Batches",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 1,
+      "position": [
+        1070,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "const prompt=$json; const models=$items('Init',0,0).json.config.models; return models.map(m=>({json:{prompt,model:m}}));"
+      },
+      "id": "Fanout",
+      "name": "Fanout Models",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 2,
+      "position": [
+        1280,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{$json.model.base_url + '/chat/completions'}}",
+        "sendBody": true,
+        "jsonParameters": true,
+        "responseFormat": "json",
+        "requestMethod": "POST",
+        "bodyParametersJson": "{\"model\":\"={{$json.model.model}}\",\"temperature\":0.0,\"messages\":[{\"role\":\"system\",\"content\":\"Bạn là chatbot chấm điểm khách hàng. Trả lời ngắn gọn.\"},{\"role\":\"user\",\"content\":\"={{$json.prompt.user_prompt}}\"}] }",
+        "headerParametersJson": "{\"Authorization\":\"=Bearer {{$json.model.api_key}}\"}"
+      },
+      "id": "CallLLM",
+      "name": "Call LLM",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        1500,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "toFile",
+        "fileFormat": "csv",
+        "options": {
+          "fileName": "results.csv",
+          "writeHeaders": true
+        }
+      },
+      "id": "ToCSV",
+      "name": "To CSV",
+      "type": "n8n-nodes-base.spreadsheetFile",
+      "typeVersion": 3,
+      "position": [
+        1700,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "fileName": "/data/results_benchmark.csv",
+        "binaryData": true
+      },
+      "id": "WriteFile",
+      "name": "Write CSV to /data",
+      "type": "n8n-nodes-base.writeBinaryFile",
+      "typeVersion": 1,
+      "position": [
+        1900,
+        160
+      ]
+    }
+  ],
+  "connections": {
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "Init",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Init": {
+      "main": [
+        [
+          {
+            "node": "Read CSV",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read CSV": {
+      "main": [
+        [
+          {
+            "node": "Parse CSV",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse CSV": {
+      "main": [
+        [
+          {
+            "node": "Split In Batches",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split In Batches": {
+      "main": [
+        [
+          {
+            "node": "Fanout Models",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fanout Models": {
+      "main": [
+        [
+          {
+            "node": "Call LLM",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call LLM": {
+      "main": [
+        [
+          {
+            "node": "To CSV",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "To CSV": {
+      "main": [
+        [
+          {
+            "node": "Write CSV to /data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false
+}
