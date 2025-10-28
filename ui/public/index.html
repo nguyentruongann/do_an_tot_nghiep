@@ -1,0 +1,88 @@
+
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <title>Customer Scoring Chat</title>
+  <style>
+    body { font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica; margin: 40px; }
+    .card { border:1px solid #ddd; padding:16px; border-radius:10px; margin:10px 0; }
+    #chatbox { height: 420px; overflow-y:auto; border:1px solid #eee; padding:10px; border-radius:8px; background:#fafafa}
+    .u { background:#e8f0ff; display:inline-block; padding:8px 10px; border-radius:10px; margin:6px 0;}
+    .b { background:#f0f0f0; display:inline-block; padding:8px 10px; border-radius:10px; margin:6px 0;}
+    small.hint { color:#666;}
+  </style>
+  <script>window.API_BASE="__API_BASE__";</script>
+</head>
+<body>
+  <h2>💬 Customer Scoring Chat</h2>
+
+  <div class="card">
+    <h3>1) Tạo phiên & tải dữ liệu (CSV/XLSX/Parquet)</h3>
+    <form id="upform">
+      <input type="file" id="file" required />
+      <button type="submit">Upload</button>
+      <button type="button" onclick="newSession()">Phiên mới</button>
+      <span id="status" class="hint"></span>
+    </form>
+    <small class="hint">Chỉ trả lời về chấm điểm (score, top-k, giải thích, ROC, ngưỡng...). Câu hỏi khác sẽ bị từ chối.</small>
+  </div>
+
+  <div class="card">
+    <h3>2) Chat</h3>
+    <div>
+      <button onclick="scoreNow()">Chấm điểm</button>
+      <a id="dl" href="#" target="_blank">Tải CSV đã chấm</a>
+    </div>
+    <div id="chatbox"></div>
+    <div style="margin-top:8px;">
+      <input id="msg" placeholder="Gõ câu hỏi về chấm điểm..." style="width:80%"/>
+      <button onclick="send()">Gửi</button>
+    </div>
+  </div>
+
+<script>
+const API = (window.API_BASE && window.API_BASE !== "__API_BASE__") ? window.API_BASE : "http://localhost:8080";
+let SID = null;
+function el(id){return document.getElementById(id)}
+function append(role, text){
+  const div=document.createElement('div'); div.className=role==='u'?'u':'b'; div.textContent=text;
+  const box=el('chatbox'); box.appendChild(div); box.scrollTop=box.scrollHeight;
+}
+async function newSession(){
+  const r = await fetch(API+'/session/new', {method:'POST', credentials:'include'});
+  const j = await r.json(); SID = j.session_id; el('status').textContent = ' Phiên: '+SID;
+  localStorage.setItem('sid', SID); append('b','Phiên mới đã tạo. Hãy upload dữ liệu của bạn.');
+}
+async function ensureSession(){
+  SID = localStorage.getItem('sid');
+  if (!SID){ await newSession(); }
+  return SID;
+}
+document.getElementById('upform').addEventListener('submit', async (e)=>{
+  e.preventDefault(); await ensureSession();
+  const f = el('file').files[0]; if(!f){ alert('Chọn file trước'); return; }
+  const form = new FormData(); form.append('file', f);
+  const r = await fetch(API+'/upload_session', {method:'POST', body: form, credentials:'include'});
+  const j = await r.json();
+  if (j.detail){ append('b', 'Lỗi upload: '+JSON.stringify(j.detail)); return; }
+  append('b', 'Đã upload: '+(j.filename||'')+' ('+j.rows+' dòng). Ví dụ hỏi: "ai là khách hàng tiềm năng top 5", "vì sao id=1 là tiềm năng?".');
+});
+async function send(){
+  await ensureSession();
+  const msg = el('msg').value.trim(); if(!msg) return;
+  append('u', msg); el('msg').value='';
+  const r = await fetch(API+'/chat', {method:'POST', credentials:'include', headers:{'Content-Type':'application/json'}, body: JSON.stringify({message: msg})});
+  const j = await r.json(); append('b', j.text || JSON.stringify(j));
+}
+async function scoreNow(){
+  await ensureSession();
+  const r = await fetch(API+'/score_session', {method:'POST', credentials:'include'});
+  const j = await r.json();
+  if (j.detail){ append('b','Lỗi: '+JSON.stringify(j.detail)); return; }
+  append('b','Đã chấm '+j.rows+' dòng.'); el('dl').href = API + '/download_scored_session';
+}
+(async()=>{ await ensureSession(); })();
+</script>
+</body>
+</html>

@@ -1,0 +1,54 @@
+version: "3.9"
+services:
+  api:
+    build: ./api
+    image: scoring-api:v4
+    container_name: scoring-api-v4
+    depends_on:
+      - redis
+    environment:
+      - CONFIG_PATH=/app/config/server_config.yaml
+      - SAVE_LOGS=true
+      - REDIS_URL=redis://redis:6379/0
+    volumes:
+      - ./api/data:/app/data
+      - ./api/models:/app/models
+      - ./api/config:/app/config:ro
+    ports:
+      - "8080:8080"
+
+  ui:
+    build:
+      context: ./ui
+      args:
+        API_BASE: ${API_BASE-http://localhost:8080}
+    image: scoring-ui:v4
+    container_name: scoring-ui-v4
+    ports:
+      - "8090:80"
+    depends_on:
+      - api
+
+  redis:
+    image: redis:7-alpine
+    container_name: scoring-redis-v4
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+
+  n8n:
+    image: n8nio/n8n:latest
+    container_name: scoring-n8n-v4
+    ports:
+      - "5678:5678"
+    environment:
+      - N8N_DISABLE_PRODUCTION_MAIN_PROCESS=false
+      - API_BASE=http://api:8080
+    volumes:
+      - ./testing:/data
+    depends_on:
+      - api
+
+volumes:
+  redis-data:
