@@ -1,0 +1,51 @@
+id,category,user_prompt,expected_contains
+P001,topk,ai là khách hàng tiềm năng top 10,Top;khách hàng
+P002,topk,liệt kê top 5 khách hàng có xác suất cao nhất,Top;khách hàng
+P003,explain,vì sao id=1 là khách hàng tiềm năng?,drift
+P004,score,"score {""age"":35,""balance"":2500,""duration"":180}",Xác suất;label
+P005,threshold,ngưỡng xác suất nên dùng để coi là khách hàng tiềm năng và vì sao,ngưỡng
+P006,features,top 5 đặc trưng ảnh hưởng lớn nhất tới điểm,đặc trưng
+P007,nba,Next Best Action cho khách hàng xác suất cao,hành động
+P008,segment,có thể phân khúc khách hàng theo rủi ro như thế nào,phân khúc
+P009,fairness,có thiên vị theo độ tuổi hay không và cách kiểm tra,bias
+P010,drift,làm sao theo dõi drift dữ liệu theo thời gian,drift
+P011,topk,ai là khách hàng tiềm năng top 10,Top;khách hàng
+P012,topk,liệt kê top 5 khách hàng có xác suất cao nhất,Top;khách hàng
+P013,explain,vì sao id=1 là khách hàng tiềm năng?,drift
+P014,score,"score {""age"":35,""balance"":2500,""duration"":180}",Xác suất;label
+P015,threshold,ngưỡng xác suất nên dùng để coi là khách hàng tiềm năng và vì sao,ngưỡng
+P016,features,top 5 đặc trưng ảnh hưởng lớn nhất tới điểm,đặc trưng
+P017,nba,Next Best Action cho khách hàng xác suất cao,hành động
+P018,segment,có thể phân khúc khách hàng theo rủi ro như thế nào,phân khúc
+P019,fairness,có thiên vị theo độ tuổi hay không và cách kiểm tra,bias
+P020,drift,làm sao theo dõi drift dữ liệu theo thời gian,drift
+P021,topk,ai là khách hàng tiềm năng top 10,Top;khách hàng
+P022,topk,liệt kê top 5 khách hàng có xác suất cao nhất,Top;khách hàng
+P023,explain,vì sao id=1 là khách hàng tiềm năng?,drift
+P024,score,"score {""age"":35,""balance"":2500,""duration"":180}",Xác suất;label
+P025,threshold,ngưỡng xác suất nên dùng để coi là khách hàng tiềm năng và vì sao,ngưỡng
+P026,features,top 5 đặc trưng ảnh hưởng lớn nhất tới điểm,đặc trưng
+P027,nba,Next Best Action cho khách hàng xác suất cao,hành động
+P028,segment,có thể phân khúc khách hàng theo rủi ro như thế nào,phân khúc
+P029,fairness,có thiên vị theo độ tuổi hay không và cách kiểm tra,bias
+P030,drift,làm sao theo dõi drift dữ liệu theo thời gian,drift
+P031,topk,ai là khách hàng tiềm năng top 10,Top;khách hàng
+P032,topk,liệt kê top 5 khách hàng có xác suất cao nhất,Top;khách hàng
+P033,explain,vì sao id=1 là khách hàng tiềm năng?,drift
+P034,score,"score {""age"":35,""balance"":2500,""duration"":180}",Xác suất;label
+P035,threshold,ngưỡng xác suất nên dùng để coi là khách hàng tiềm năng và vì sao,ngưỡng
+P036,features,top 5 đặc trưng ảnh hưởng lớn nhất tới điểm,đặc trưng
+P037,nba,Next Best Action cho khách hàng xác suất cao,hành động
+P038,segment,có thể phân khúc khách hàng theo rủi ro như thế nào,phân khúc
+P039,fairness,có thiên vị theo độ tuổi hay không và cách kiểm tra,bias
+P040,drift,làm sao theo dõi drift dữ liệu theo thời gian,drift
+P041,topk,ai là khách hàng tiềm năng top 10,Top;khách hàng
+P042,topk,liệt kê top 5 khách hàng có xác suất cao nhất,Top;khách hàng
+P043,explain,vì sao id=1 là khách hàng tiềm năng?,drift
+P044,score,"score {""age"":35,""balance"":2500,""duration"":180}",Xác suất;label
+P045,threshold,ngưỡng xác suất nên dùng để coi là khách hàng tiềm năng và vì sao,ngưỡng
+P046,features,top 5 đặc trưng ảnh hưởng lớn nhất tới điểm,đặc trưng
+P047,nba,Next Best Action cho khách hàng xác suất cao,hành động
+P048,segment,có thể phân khúc khách hàng theo rủi ro như thế nào,phân khúc
+P049,fairness,có thiên vị theo độ tuổi hay không và cách kiểm tra,bias
+P050,drift,làm sao theo dõi drift dữ liệu theo thời gian,drift

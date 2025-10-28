@@ -1,0 +1,343 @@
+{
+  "name": "API Benchmark – Session upload + /chat",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "Trigger",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        140,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "return [{api_base: $env.API_BASE || 'http://api:8080', dataset_path: '/data/data_test/BankCustomerData.csv'}];"
+      },
+      "id": "Init",
+      "name": "Init",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 2,
+      "position": [
+        360,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{$json.api_base + '/session/new'}}",
+        "jsonParameters": true,
+        "options": {},
+        "requestMethod": "POST",
+        "sendBody": true
+      },
+      "id": "NewSession",
+      "name": "New Session",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 5,
+      "position": [
+        580,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "filePath": "={{$item(0).$node['Init'].json.dataset_path}}"
+      },
+      "id": "ReadFile",
+      "name": "Read Dataset",
+      "type": "n8n-nodes-base.readBinaryFile",
+      "typeVersion": 1,
+      "position": [
+        780,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{$item(0).$node['Init'].json.api_base + '/upload_session'}}",
+        "sendBinaryData": true,
+        "binaryPropertyName": "data",
+        "options": {
+          "multipartFormData": [
+            {
+              "name": "file",
+              "value": "={{$binary.data}}"
+            }
+          ]
+        },
+        "headerParametersJson": "{\"Cookie\":\"=sid={{$json.body.session_id}}\"}"
+      },
+      "id": "Upload",
+      "name": "Upload to API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 5,
+      "position": [
+        980,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{$item(0).$node['Init'].json.api_base + '/score_session'}}",
+        "jsonParameters": true,
+        "requestMethod": "POST",
+        "sendBody": true,
+        "headerParametersJson": "{\"Cookie\":\"=sid={{$item(0).$node['New Session'].json.body.session_id}}\"}"
+      },
+      "id": "Score",
+      "name": "Score Session",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 5,
+      "position": [
+        1180,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "filePath": "/data/prompts_50.csv"
+      },
+      "id": "ReadCSV",
+      "name": "Read CSV (Prompts)",
+      "type": "n8n-nodes-base.readBinaryFile",
+      "typeVersion": 1,
+      "position": [
+        800,
+        420
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "fromBinary",
+        "binaryPropertyName": "data",
+        "options": {
+          "headerRow": true
+        }
+      },
+      "id": "ParseCSV",
+      "name": "Parse CSV",
+      "type": "n8n-nodes-base.spreadsheetFile",
+      "typeVersion": 3,
+      "position": [
+        1020,
+        420
+      ]
+    },
+    {
+      "parameters": {
+        "batchSize": 1
+      },
+      "id": "Split",
+      "name": "Split In Batches",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 1,
+      "position": [
+        1240,
+        420
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{$item(0).$node['Init'].json.api_base + '/chat'}}",
+        "jsonParameters": true,
+        "responseFormat": "json",
+        "requestMethod": "POST",
+        "sendBody": true,
+        "bodyParametersJson": "{\"message\":\"={{$json.user_prompt}}\"}",
+        "headerParametersJson": "{\"Cookie\":\"=sid={{$item(0).$node['New Session'].json.body.session_id}}\"}"
+      },
+      "id": "CallChat",
+      "name": "Call API /chat",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 5,
+      "position": [
+        1440,
+        420
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "toFile",
+        "fileFormat": "csv",
+        "options": {
+          "fileName": "results_api.csv",
+          "writeHeaders": true
+        }
+      },
+      "id": "ToCSV",
+      "name": "To CSV",
+      "type": "n8n-nodes-base.spreadsheetFile",
+      "typeVersion": 3,
+      "position": [
+        1640,
+        420
+      ]
+    },
+    {
+      "parameters": {
+        "fileName": "/data/results_api_benchmark.csv",
+        "binaryData": true
+      },
+      "id": "Write",
+      "name": "Write to /data",
+      "type": "n8n-nodes-base.writeBinaryFile",
+      "typeVersion": 1,
+      "position": [
+        1840,
+        420
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "Next",
+      "name": "Next Batch",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1440,
+        570
+      ]
+    }
+  ],
+  "connections": {
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "Init",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Init": {
+      "main": [
+        [
+          {
+            "node": "New Session",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Read CSV (Prompts)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read CSV (Prompts)": {
+      "main": [
+        [
+          {
+            "node": "Parse CSV",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse CSV": {
+      "main": [
+        [
+          {
+            "node": "Split In Batches",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split In Batches": {
+      "main": [
+        [
+          {
+            "node": "Call API /chat",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ],
+      "after": [
+        [
+          {
+            "node": "Next Batch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "New Session": {
+      "main": [
+        [
+          {
+            "node": "Read Dataset",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Dataset": {
+      "main": [
+        [
+          {
+            "node": "Upload to API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload to API": {
+      "main": [
+        [
+          {
+            "node": "Score Session",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call API /chat": {
+      "main": [
+        [
+          {
+            "node": "To CSV",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "To CSV": {
+      "main": [
+        [
+          {
+            "node": "Write to /data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Next Batch": {
+      "main": [
+        [
+          {
+            "node": "Split In Batches",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false
+}
