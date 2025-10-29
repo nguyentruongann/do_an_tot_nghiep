@@ -1,0 +1,81 @@
+{
+  "name": "API Benchmark – Single Flow (compat)",
+  "nodes": [
+    { "parameters": {}, "id": "t1", "name": "Manual Trigger", "type": "n8n-nodes-base.manualTrigger", "typeVersion": 1, "position": [140, 240] },
+
+    { "parameters": { "functionCode": "return [{ api_base: $env.API_BASE || 'http://api:8080', dataset_path: '/data/data_test/BankCustomerData.csv' }];" },
+      "id": "t2", "name": "Init", "type": "n8n-nodes-base.function", "typeVersion": 1, "position": [360, 240] },
+
+    { "parameters": { "url": "={{$node['Init'].json.api_base + '/session/new'}}", "options": {}, "jsonParameters": true },
+      "id": "t3", "name": "New Session", "type": "n8n-nodes-base.httpRequest", "typeVersion": 3, "position": [580, 240] },
+
+    { "parameters": { "filePath": "={{$node['Init'].json.dataset_path}}" },
+      "id": "t4", "name": "Read Dataset", "type": "n8n-nodes-base.readBinaryFile", "typeVersion": 1, "position": [780, 200] },
+
+    { "parameters": {
+        "url": "={{$node['Init'].json.api_base + '/upload_session'}}",
+        "sendBinaryData": true,
+        "binaryPropertyName": "data",
+        "jsonParameters": true,
+        "options": { "bodyContentType": "form-data" },
+        "headerParametersJson": "{\"Cookie\":\"sid={{$node['New Session'].json.session_id}}\"}"
+      },
+      "id": "t5", "name": "Upload to API", "type": "n8n-nodes-base.httpRequest", "typeVersion": 3, "position": [980, 200] },
+
+    { "parameters": {
+        "url": "={{$node['Init'].json.api_base + '/score_session'}}",
+        "jsonParameters": true,
+        "options": {},
+        "headerParametersJson": "{\"Cookie\":\"sid={{$node['New Session'].json.session_id}}\"}"
+      },
+      "id": "t6", "name": "Score Session", "type": "n8n-nodes-base.httpRequest", "typeVersion": 3, "position": [1180, 200] },
+
+    { "parameters": {
+        "functionCode": "const prompts=[]; const base=[['topk','ai là khách hàng tiềm năng top 10'],['topk','liệt kê top 5 khách hàng có xác suất cao nhất'],['explain','vì sao id=1 là khách hàng tiềm năng?'],['score','score {\"age\":35,\"balance\":2500,\"duration\":180}'],['threshold','ngưỡng xác suất nên dùng để coi là khách hàng tiềm năng và vì sao'],['features','top 5 đặc trưng ảnh hưởng lớn nhất tới điểm'],['nba','Next Best Action cho nhóm xác suất cao'],['segment','cách phân khúc khách hàng theo rủi ro'],['fairness','có thiên vị theo độ tuổi không? kiểm tra thế nào?'],['drift','làm sao theo dõi drift dữ liệu theo thời gian?']]; for (let i=0;i<50;i++){ const t=base[i%base.length]; prompts.push({id:`P${String(i+1).padStart(3,'0')}`,category:t[0],user_prompt:t[1]}); } return prompts.map(p=>({json:p}));"
+      },
+      "id": "t7", "name": "Generate Prompts", "type": "n8n-nodes-base.function", "typeVersion": 1, "position": [780, 420] },
+
+    { "parameters": { "batchSize": 1 },
+      "id": "t8", "name": "Split In Batches", "type": "n8n-nodes-base.splitInBatches", "typeVersion": 1, "position": [1000, 420] },
+
+    { "parameters": {
+        "url": "={{$node['Init'].json.api_base + '/chat'}}",
+        "jsonParameters": true,
+        "options": {},
+        "headerParametersJson": "{\"Cookie\":\"sid={{$node['New Session'].json.session_id}}\"}",
+        "sendBody": true,
+        "bodyParametersJson": "{\"message\":\"={{$json.user_prompt}}\"}"
+      },
+      "id": "t9", "name": "Call API chat", "type": "n8n-nodes-base.httpRequest", "typeVersion": 3, "position": [1200, 420] },
+
+    { "parameters": {
+        "functionCode": "const p=$item(0).$node['Split In Batches'].json; let answer=''; try{answer=$json.body.text||''}catch(e){answer=JSON.stringify($json)} return [{id:p.id,category:p.category,user_prompt:p.user_prompt,answer}];"
+      },
+      "id": "t10", "name": "Pick Fields", "type": "n8n-nodes-base.function", "typeVersion": 1, "position": [1400, 420] },
+
+    { "parameters": { "operation": "toFile", "fileFormat": "csv", "options": { "fileName": "results_api.csv", "writeHeaders": true } },
+      "id": "t11", "name": "Write CSV (binary)", "type": "n8n-nodes-base.spreadsheetFile", "typeVersion": 2, "position": [1600, 420] },
+
+    { "parameters": { "fileName": "/data/results_api_benchmark.csv", "binaryData": true },
+      "id": "t12", "name": "Write to /data", "type": "n8n-nodes-base.writeBinaryFile", "typeVersion": 1, "position": [1800, 420] },
+
+    { "parameters": {}, "id": "t13", "name": "Next Batch", "type": "n8n-nodes-base.noOp", "typeVersion": 1, "position": [1200, 570] }
+  ],
+  "connections": {
+    "Manual Trigger": { "main": [[{ "node": "Init", "type": "main", "index": 0 }]] },
+    "Init": { "main": [[{ "node": "New Session", "type": "main", "index": 0 }, { "node": "Generate Prompts", "type": "main", "index": 0 }]] },
+    "New Session": { "main": [[{ "node": "Read Dataset", "type": "main", "index": 0 }]] },
+    "Read Dataset": { "main": [[{ "node": "Upload to API", "type": "main", "index": 0 }]] },
+    "Upload to API": { "main": [[{ "node": "Score Session", "type": "main", "index": 0 }]] },
+    "Generate Prompts": { "main": [[{ "node": "Split In Batches", "type": "main", "index": 0 }]] },
+    "Split In Batches": {
+      "main": [[{ "node": "Call API chat", "type": "main", "index": 0 }]],
+      "after": [[{ "node": "Next Batch", "type": "main", "index": 0 }]]
+    },
+    "Call API chat": { "main": [[{ "node": "Pick Fields", "type": "main", "index": 0 }]] },
+    "Pick Fields": { "main": [[{ "node": "Write CSV (binary)", "type": "main", "index": 0 }]] },
+    "Write CSV (binary)": { "main": [[{ "node": "Write to /data", "type": "main", "index": 0 }]] },
+    "Next Batch": { "main": [[{ "node": "Split In Batches", "type": "main", "index": 0 }]] }
+  },
+  "active": false
+}

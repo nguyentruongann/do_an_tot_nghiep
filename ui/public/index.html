@@ -1,88 +1,294 @@
-
 <!doctype html>
-<html>
+<html lang="vi">
 <head>
-  <meta charset="utf-8"/>
-  <title>Customer Scoring Chat</title>
-  <style>
-    body { font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica; margin: 40px; }
-    .card { border:1px solid #ddd; padding:16px; border-radius:10px; margin:10px 0; }
-    #chatbox { height: 420px; overflow-y:auto; border:1px solid #eee; padding:10px; border-radius:8px; background:#fafafa}
-    .u { background:#e8f0ff; display:inline-block; padding:8px 10px; border-radius:10px; margin:6px 0;}
-    .b { background:#f0f0f0; display:inline-block; padding:8px 10px; border-radius:10px; margin:6px 0;}
-    small.hint { color:#666;}
-  </style>
-  <script>window.API_BASE="__API_BASE__";</script>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Customer Scoring Chat</title>
+<style>
+  :root{--bg:#0f172a;--panel:#0b1220;--muted:#94a3b8;--text:#e2e8f0;--accent:#2dd4bf}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);font:14px/1.5 ui-sans-serif,system-ui,Segoe UI,Roboto}
+  .wrap{max-width:1180px;margin:26px auto;padding:0 18px}
+  .hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+  .apiTag{background:#0c2230;border:1px solid #194a5a;color:#a8d1db;padding:6px 10px;border-radius:8px;font-size:12px}
+  .grid{display:grid;grid-template-columns:1.05fr .95fr;gap:18px}
+  .card{background:#0b1220;border:1px solid #1e293b;border-radius:14px}
+  .card h3{margin:0;padding:14px 16px;border-bottom:1px solid #1e293b;font-size:16px}
+  .card .body{padding:16px}
+  .row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+  .btn{display:inline-flex;align-items:center;gap:8px;background:#1f2937;color:#e5edf5;border:1px solid #2b3a52;border-radius:10px;padding:9px 12px;cursor:pointer}
+  .btn:hover{background:#26344a}.btn:disabled{opacity:.6;cursor:not-allowed}
+  .btn.primary{background:#11314f;border-color:#224a78}.btn.primary:hover{background:#173a5e}
+  .btn.success{background:#0d2e2e;border-color:#1a4a4a}.btn.success:hover{background:#123838}
+  .btn.mini{padding:5px 8px;border-radius:8px;font-size:12px}
+  .drop{border:2px dashed #244262;border-radius:12px;padding:14px;min-height:70px;display:flex;align-items:center;justify-content:center;color:#a0b6ca;cursor:pointer}
+  .drop.drag{background:#0d1727}
+  .dropInner{width:100%;display:flex;align-items:center;justify-content:center}
+  .dropIdle{opacity:.9}
+  .dropChosen{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+  .fileMeta{display:flex;align-items:center;gap:8px}
+  .fileName{font-weight:700}
+  .sid{color:#a7c7d8}
+  .previewTitle{margin:16px 0 8px;color:#89a2b1}
+  .preview{height:220px;border:1px solid #23324a;border-radius:10px;background:#0a1322;padding:12px;overflow:auto;white-space:pre;font:12px/1.4 ui-monospace,monospace;color:#cbd5e1}
+  .hint{margin-top:8px;color:#89a2b1;font-size:12px}
+  .chat{height:560px;display:flex;flex-direction:column}
+  .chatBox{flex:1;padding:12px;overflow:auto}
+  .bubble{max-width:86%;padding:10px 12px;border-radius:12px;margin:8px 0;white-space:pre-wrap}
+  .bot{background:#0f2137;border:1px solid #1f334f;color:#d2e6ff}
+  .user{margin-left:auto;background:#184a49;border:1px solid #276e6c}
+  .chatSend{display:flex;gap:10px;border-top:1px solid #1e293b;padding:10px}
+  .chatInput{flex:1;padding:10px;border-radius:10px;background:#0a1322;border:1px solid #23324a;color:#e8f0f6}
+  .busy{display:inline-flex;align-items:center;gap:8px;color:#9cc;margin-left:8px;font-size:12px}
+  .busy.hidden{display:none}
+  .spin{width:12px;height:12px;border-radius:50%;border:2px solid #97c7d1;border-top-color:transparent;animation:spin .9s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .toast{margin-top:10px;padding:10px;border-radius:8px;background:#211111;border:1px solid #502626;color:#f1caca;display:none}
+  .toast.show{display:block}
+  .banner{margin-bottom:12px;padding:10px;border-radius:10px;border:1px solid #4f1e1e;background:#231010;color:#f8d7da;display:none}
+  .banner.show{display:block}
+  a.download{display:none}
+  .hidden{display:none}
+</style>
 </head>
 <body>
-  <h2>💬 Customer Scoring Chat</h2>
-
-  <div class="card">
-    <h3>1) Tạo phiên & tải dữ liệu (CSV/XLSX/Parquet)</h3>
-    <form id="upform">
-      <input type="file" id="file" required />
-      <button type="submit">Upload</button>
-      <button type="button" onclick="newSession()">Phiên mới</button>
-      <span id="status" class="hint"></span>
-    </form>
-    <small class="hint">Chỉ trả lời về chấm điểm (score, top-k, giải thích, ROC, ngưỡng...). Câu hỏi khác sẽ bị từ chối.</small>
+<div class="wrap">
+  <div id="banner" class="banner"></div>
+  <div class="hdr">
+    <h2>Customer Scoring Chat</h2>
+    <span class="apiTag">API: <span id="apiBase">__API_BASE__</span></span>
   </div>
 
-  <div class="card">
-    <h3>2) Chat</h3>
-    <div>
-      <button onclick="scoreNow()">Chấm điểm</button>
-      <a id="dl" href="#" target="_blank">Tải CSV đã chấm</a>
+  <div class="grid">
+    <div class="card">
+      <h3>1) Tạo phiên & tải dữ liệu</h3>
+      <div class="body">
+        <div class="row">
+          <button class="btn success" onclick="onNew()">➕ Phiên mới</button>
+          <div>Phiên: <span class="sid" id="sid">chưa tạo</span></div>
+          <a id="dlBtn" class="btn download" href="#" download>⬇️ Tải CSV đã chấm</a>
+          <span id="busy" class="busy hidden"><span class="spin"></span><span id="busyText">Đang xử lý…</span></span>
+        </div>
+
+        <!-- DROPZONE -->
+        <div id="drop" class="drop"
+             ondragover="onDragOver(event)" ondragleave="onDragLeave()" ondrop="onDrop(event)"
+             onclick="onClickDrop()">
+          <div class="dropInner">
+            <div id="dropIdle" class="dropIdle">
+              Kéo & thả file vào đây hoặc
+              <span style="text-decoration:underline">chọn tệp</span>
+            </div>
+            <div id="dropChosen" class="dropChosen hidden">
+              <div class="fileMeta">
+                <span class="fileName" id="fileName"></span>
+                <span id="fileSize" style="opacity:.85"></span>
+              </div>
+              <button class="btn mini" onclick="changeFile(event)">Đổi tệp</button>
+              <button class="btn mini" onclick="clearFile(event)">Xoá</button>
+            </div>
+          </div>
+          <!-- Input file (có thể bị strip ở 1 số hosting, ta vẫn tạo fallback trong JS) -->
+          <input type="file" id="file" accept=".csv,.xlsx,.xls,.parquet" style="display:none" onchange="onFileChosen()"/>
+        </div>
+
+        <div class="row" style="margin-top:10px">
+          <button id="uploadBtn" class="btn" onclick="onUpload()">📘 Upload</button>
+          <button id="scoreBtn"  class="btn primary" onclick="onScore()">⚙️ Chấm điểm</button>
+        </div>
+
+        <div id="toast" class="toast"></div>
+
+        <div class="previewTitle">Xem nhanh CSV (12 dòng đầu):</div>
+        <div id="preview" class="preview"></div>
+        <div class="hint">Chỉ trả lời câu hỏi liên quan đến <b>chấm điểm/khách hàng tiềm năng</b>. Muốn hỏi về kết quả, hãy tải dữ liệu lên & bấm <b>Chấm điểm</b>.</div>
+      </div>
     </div>
-    <div id="chatbox"></div>
-    <div style="margin-top:8px;">
-      <input id="msg" placeholder="Gõ câu hỏi về chấm điểm..." style="width:80%"/>
-      <button onclick="send()">Gửi</button>
+
+    <div class="card chat">
+      <h3>2) Chat</h3>
+      <div id="chat" class="chatBox"></div>
+      <div class="chatSend">
+        <input id="msg" class="chatInput" placeholder="Gõ câu hỏi về chấm điểm…"/>
+        <button class="btn" onclick="onSend()">Gửi</button>
+      </div>
     </div>
   </div>
+</div>
 
 <script>
-const API = (window.API_BASE && window.API_BASE !== "__API_BASE__") ? window.API_BASE : "http://localhost:8080";
-let SID = null;
-function el(id){return document.getElementById(id)}
-function append(role, text){
-  const div=document.createElement('div'); div.className=role==='u'?'u':'b'; div.textContent=text;
-  const box=el('chatbox'); box.appendChild(div); box.scrollTop=box.scrollHeight;
-}
-async function newSession(){
-  const r = await fetch(API+'/session/new', {method:'POST', credentials:'include'});
-  const j = await r.json(); SID = j.session_id; el('status').textContent = ' Phiên: '+SID;
-  localStorage.setItem('sid', SID); append('b','Phiên mới đã tạo. Hãy upload dữ liệu của bạn.');
-}
-async function ensureSession(){
-  SID = localStorage.getItem('sid');
-  if (!SID){ await newSession(); }
-  return SID;
-}
-document.getElementById('upform').addEventListener('submit', async (e)=>{
-  e.preventDefault(); await ensureSession();
-  const f = el('file').files[0]; if(!f){ alert('Chọn file trước'); return; }
-  const form = new FormData(); form.append('file', f);
-  const r = await fetch(API+'/upload_session', {method:'POST', body: form, credentials:'include'});
-  const j = await r.json();
-  if (j.detail){ append('b', 'Lỗi upload: '+JSON.stringify(j.detail)); return; }
-  append('b', 'Đã upload: '+(j.filename||'')+' ('+j.rows+' dòng). Ví dụ hỏi: "ai là khách hàng tiềm năng top 5", "vì sao id=1 là tiềm năng?".');
-});
-async function send(){
-  await ensureSession();
-  const msg = el('msg').value.trim(); if(!msg) return;
-  append('u', msg); el('msg').value='';
-  const r = await fetch(API+'/chat', {method:'POST', credentials:'include', headers:{'Content-Type':'application/json'}, body: JSON.stringify({message: msg})});
-  const j = await r.json(); append('b', j.text || JSON.stringify(j));
-}
-async function scoreNow(){
-  await ensureSession();
-  const r = await fetch(API+'/score_session', {method:'POST', credentials:'include'});
-  const j = await r.json();
-  if (j.detail){ append('b','Lỗi: '+JSON.stringify(j.detail)); return; }
-  append('b','Đã chấm '+j.rows+' dòng.'); el('dl').href = API + '/download_scored_session';
-}
-(async()=>{ await ensureSession(); })();
+  // ===== CONFIG =====
+  const API_BASE = '__API_BASE__';
+
+  // ===== STATE & UTILS =====
+  let SID = null;
+  let uploadedOK = false;
+
+  const $ = id => document.getElementById(id);
+  const log = (...a) => console.log('[UI]', ...a);
+
+  function setSid(v){ SID=v; $('sid').textContent=v||'chưa tạo'; }
+  function addBubble(html, cls='bot'){ const el=document.createElement('div'); el.className='bubble '+cls; el.innerHTML=html; $('chat').appendChild(el); $('chat').scrollTop=$('chat').scrollHeight; }
+  function addBot(t){ addBubble(t,'bot'); }
+  function addUser(t){ addBubble(t,'user'); }
+  function toast(msg){ const t=$('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'), 4000); }
+  function setBusy(on, txt='Đang xử lý…'){ const b=$('busy'), t=$('busyText'); if(on){ b.classList.remove('hidden'); t.textContent=txt; disable(true) } else { b.classList.add('hidden'); disable(false) } }
+  function disable(dis){ ['uploadBtn','scoreBtn'].forEach(id => { const el=$(id); if(el) el.disabled=dis; }); }
+
+  function fmtPreview(data){
+    if(!data) return '';
+    if(typeof data==='string') return data;
+    if(data.rows) return fmtPreview(data.rows);
+    if(data.lines) return fmtPreview(data.lines);
+    if(data.sample) return fmtPreview(data.sample);
+    if(Array.isArray(data)){
+      if(!data.length) return '';
+      if(typeof data[0]==='string') return data.join('\n');
+      if(typeof data[0]==='object' && !Array.isArray(data[0])){
+        const cols=Object.keys(data[0]); const out=[cols.join(',')];
+        for(const row of data){ out.push(cols.map(c=>String(row[c]??'')).join(',')); }
+        return out.join('\n');
+      }
+      return data.map(r=>Array.isArray(r)?r.join(','):String(r)).join('\n');
+    }
+    try{ return JSON.stringify(data,null,2) }catch{ return String(data) }
+  }
+
+  async function api(url, opts={}){
+    const r = await fetch(url, {
+      ...opts,
+      headers: (opts.body instanceof FormData) ? (opts.headers||{}) : {'Content-Type':'application/json', ...(opts.headers||{})}
+    });
+    const ctype = r.headers.get('content-type')||'';
+    const text = await r.text();
+    let data = text; try{ if(ctype.includes('application/json')) data=JSON.parse(text) }catch{}
+    if(!r.ok) throw new Error(typeof data==='string'?data:(data.detail?JSON.stringify(data.detail):JSON.stringify(data)));
+    return data;
+  }
+
+  // ========== FILE INPUT HELPERS ==========
+  function ensureFileInput(){
+    let el = document.getElementById('file');
+    if(!el){
+      el = document.createElement('input');
+      el.type = 'file';
+      el.id = 'file';
+      el.accept = '.csv,.xlsx,.xls,.parquet';
+      el.style.display = 'none';
+      document.body.appendChild(el);
+      el.addEventListener('change', onFileChosen);
+      log('Created fallback <input id="file">');
+    }
+    return el;
+  }
+  function setDropInfo(file){
+    const idle = $('dropIdle'); const chosen = $('dropChosen');
+    if(file){
+      $('fileName').textContent = file.name;
+      $('fileSize').textContent = '• ' + (file.size/1024).toFixed(1) + ' KB';
+      idle.classList.add('hidden'); chosen.classList.remove('hidden');
+    }else{
+      idle.classList.remove('hidden'); chosen.classList.add('hidden');
+    }
+  }
+  function onClickDrop(){
+    // Cho phép đổi/chọn tệp bằng click
+    ensureFileInput().click();
+  }
+  function changeFile(e){
+    e?.stopPropagation();
+    ensureFileInput().click();
+  }
+  function clearFile(e){
+    e?.stopPropagation();
+    const inp = ensureFileInput();
+    inp.value = '';
+    setDropInfo(null);
+    uploadedOK = false;
+    $('preview').textContent = '';
+  }
+
+  // ===== INIT =====
+  (function init(){
+    $('apiBase').textContent = API_BASE;
+    addBot('Chào bạn 👋! Bấm **Phiên mới** rồi upload CSV để bắt đầu.');
+    ensureFileInput(); // đảm bảo có input
+  })();
+
+  // ===== DRAG-DROP =====
+  function onDragOver(e){ e.preventDefault(); $('drop').classList.add('drag'); }
+  function onDragLeave(){ $('drop').classList.remove('drag'); }
+  function onDrop(e){
+    e.preventDefault(); $('drop').classList.remove('drag');
+    const inp = ensureFileInput();
+    if(e.dataTransfer.files?.length){ inp.files = e.dataTransfer.files; showChosen(); }
+  }
+  function showChosen(){
+    const f = ensureFileInput().files[0];
+    if(f){ setDropInfo(f); uploadedOK=false; $('preview').textContent=''; }
+  }
+  function onFileChosen(){ showChosen(); }
+
+  // ===== ACTIONS =====
+  async function onNew(){
+    try{
+      setBusy(true,'Tạo phiên…');
+      const d = await api(`${API_BASE}/session/new`, {method:'POST'});
+      setSid(d.sid); uploadedOK=false;
+      $('preview').textContent=''; $('dlBtn').style.display='none';
+      setDropInfo(null);
+      addBot('Phiên mới đã tạo. Hãy kéo-thả/chọn file rồi bấm **Upload**.');
+    }catch(e){ toast('Không tạo được phiên: '+e.message); }
+    finally{ setBusy(false); }
+  }
+
+  async function onUpload(){
+    if(!SID){ toast('Chưa có phiên. Bấm “Phiên mới” trước.'); addBot('Bạn cần tạo phiên trước.'); return; }
+    const inp = ensureFileInput();
+    const f = (inp && inp.files && inp.files[0]) ? inp.files[0] : null;
+
+    if(!f){
+      inp.click();
+      const once = async () => { inp.removeEventListener('change', once); await onUpload(); };
+      inp.addEventListener('change', once);
+      return;
+    }
+
+    const fd = new FormData(); fd.append('sid', SID); fd.append('file', f);
+    try{
+      setBusy(true,'Đang tải file…'); toast('Đang tải file lên /upload_session …');
+      const d = await api(`${API_BASE}/upload_session`, {method:'POST', body: fd});
+      uploadedOK=true;
+      const sample = d.sample_head_12 ?? d.preview ?? d.head ?? d.sample ?? d.rows ?? d.lines ?? '';
+      $('preview').textContent = fmtPreview(sample);
+      setDropInfo(f);
+      addBot(`Đã nhận **${f.name}**. Có thể bấm **Chấm điểm**.`);
+    }catch(e){
+      uploadedOK=false; toast('Upload thất bại: '+e.message); addBot('Upload thất bại: '+e.message);
+    }finally{ setBusy(false); }
+  }
+
+  async function onScore(){
+    if(!SID){ toast('Chưa có phiên.'); addBot('Bạn cần tạo phiên trước.'); return; }
+    if(!uploadedOK){ toast('Chưa có dữ liệu. Upload trước rồi chấm.'); addBot('Chưa có dữ liệu trong phiên. Hãy upload CSV trước.'); return; }
+    try{
+      setBusy(true,'Đang chấm…'); toast('Đang chấm điểm /score_session …');
+      await api(`${API_BASE}/score_session?sid=${encodeURIComponent(SID)}`, {method:'POST'});
+      $('dlBtn').href = `${API_BASE}/download_scored_session?sid=${encodeURIComponent(SID)}`;
+      $('dlBtn').classList.remove('download'); $('dlBtn').style.display='inline-flex';
+      addBot('Chấm điểm xong ✅. Bạn có thể **tải CSV đã chấm** hoặc hỏi về kết quả (AUC, top khách hàng…).');
+    }catch(e){ toast('Lỗi chấm điểm: '+e.message); addBot('Lỗi khi chấm điểm: '+e.message); }
+    finally{ setBusy(false); }
+  }
+
+  async function onSend(){
+    const m = $('msg').value.trim(); if(!m) return; $('msg').value='';
+    addUser(m);
+    try{
+      const d = await api(`${API_BASE}/chat`, {method:'POST', body: JSON.stringify({message:m, sid: SID || null})});
+      addBot(d.text || '(Không có phản hồi)');
+    }catch(e){ addBot('Lỗi: '+e.message); }
+  }
 </script>
 </body>
 </html>
