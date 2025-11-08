@@ -1,0 +1,16 @@
+version: "3.9"
+services:
+  api:
+    build: ./api
+    environment:
+      - CONFIG_PATH=/app/config/server_config.yaml
+      - REDIS_URL=redis://redis:6379/0
+      - SAVE_LOGS=true
+    ports:
+      - "8080:8080"
+    depends_on:
+      - redis
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
