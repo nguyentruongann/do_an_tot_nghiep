@@ -1,0 +1,17 @@
+llm:
+  base_url: "https://api.groq.com/openai/v1"
+  api_key: ""
+  model: "llama-3.3-70b-versatile"
+  temperature: 0.2
+
+server:
+  host: "0.0.0.0"
+  port: 8080
+
+storage:
+  logs_key_prefix: "logs"
+  cache_key_prefix: "cache"
+  ttl_seconds: 259200
+
+training:
+  data_path: "/app/data/training/leads_erpnext_100k.csv"
