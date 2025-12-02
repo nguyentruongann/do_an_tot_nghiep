@@ -400,7 +400,7 @@ def build_model_prompt(statistics: Dict[str, Any],
     prompt += """
     Dựa trên thông tin thống kê trên, bạn hãy:
     1. Dựa vào tần suất và số lượng các nhãn so với nhãn tổng trong các lead tương tự để xác định nhãn cuối cùng cho lead này (Junk, Unqualified, Qualified).
-    2. Nhãn cuối cùng là **Qualified** khi is_vip là 1 hoặc **% Qualified** lệch so với %Junk hoặc %Unqualified trên 8% và số lượng lệch từ 3 cột trở lên mới có thể được phân loại là **Qualified**.
+    2. Nhãn cuối cùng là **Qualified** khi is_vip là 1 hoặc **% Qualified** lệch so với %Junk hoặc %Unqualified trên 8% và số lượng lệch chiếm số cột nhiều hơn mới có thể được phân loại là **Qualified**.
     2. Nếu xác định **không phải là Qualified**, bạn cần **xem xét kỹ** số lượng các cột có tỷ lệ % nhãn Junk hay Unqualified cao hơn để đưa ra quyết định cuối cùng.
     3. Đưa ra điểm số cuối cùng cho lead này từ 0-100.
     
