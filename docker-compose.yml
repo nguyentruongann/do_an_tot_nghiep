@@ -1,0 +1,18 @@
+version: "3.9"
+services:
+  api:
+    build: ./api
+    environment:
+      - CONFIG_PATH=/app/config/server_config.yaml
+      - REDIS_URL=redis://redis:6379/0
+      - SAVE_LOGS=true
+    ports:
+      - "8080:8080"
+    depends_on:
+      - redis
+    volumes:
+      - D:/HK9/DoAn/ddddd/vip_scoring_with_eval_and_docs/api/data:/app/data  # Mount dữ liệu vào container
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"

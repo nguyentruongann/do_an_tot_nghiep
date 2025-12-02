@@ -1,0 +1,19 @@
+llm:
+  base_url: "https://api.groq.com/openai/v1"
+  api_key: "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"
+  model: "llama-3.3-70b-versatile"
+  temperature: 0.7
+
+server:
+  host: "0.0.0.0"
+  port: 8080
+
+storage:
+  logs_key_prefix: "logs"
+  cache_key_prefix: "cache"
+  ttl_seconds: 259200
+
+training:
+  data_path: "D:\\HK9\\DoAn\\ddddd\\vip_scoring_with_eval_and_docs\\api\\data\\training\\data.csv"
+
+ 
