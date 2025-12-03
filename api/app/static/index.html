@@ -1,0 +1,1056 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <title>VIP Scoring Chatbot</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root {
+      --bg: #020617;
+      --bg-alt: #0b1120;
+      --card: #020617;
+      --accent: #38bdf8;
+      --accent-soft: rgba(56, 189, 248, 0.15);
+      --user: #22c55e;
+      --bot: #38bdf8;
+      --border: #1f2937;
+      --text-main: #e5e7eb;
+      --text-muted: #9ca3af;
+      --radius: 16px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: radial-gradient(circle at top, #0b1120, #020617 60%);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      align-items: stretch;
+      justify-content: center;
+      padding: 16px;
+    }
+
+    .app {
+      width: 100%;
+      max-width: 1200px;
+      background: linear-gradient(135deg, rgba(15, 23, 42, 0.96), rgba(2, 6, 23, 0.98));
+      border-radius: 24px;
+      border: 1px solid rgba(148, 163, 184, 0.3);
+      box-shadow: 0 20px 60px rgba(15, 23, 42, 0.9);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .app-header {
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      background: radial-gradient(circle at left, rgba(56, 189, 248, 0.12), transparent);
+    }
+
+    .app-header-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .logo {
+      width: 32px;
+      height: 32px;
+      border-radius: 999px;
+      background: conic-gradient(from 180deg, #22c55e, #22d3ee, #6366f1, #22c55e);
+      padding: 2px;
+    }
+
+    .logo-inner {
+      width: 100%;
+      height: 100%;
+      border-radius: inherit;
+      background: var(--bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 16px;
+      color: var(--accent);
+    }
+
+    .title-block {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .title-block h1 {
+      font-size: 16px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .badge {
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.4);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+    }
+
+    .title-block p {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .app-header-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 11px;
+    }
+
+    .session-pill {
+      font-size: 11px;
+      color: var(--accent);
+      background: var(--accent-soft);
+      padding: 4px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(56, 189, 248, 0.6);
+      max-width: 200px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .api-status {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .app-body {
+      flex: 1;
+      display: flex;
+      min-height: 0;
+    }
+
+    /* Sessions panel */
+
+    .sessions-panel {
+      width: 260px;
+      border-right: 1px solid var(--border);
+      background: radial-gradient(circle at top left, rgba(37, 99, 235, 0.18), rgba(15, 23, 42, 0.9));
+      display: flex;
+      flex-direction: column;
+      padding: 12px;
+      gap: 10px;
+    }
+
+    .sessions-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 4px;
+    }
+
+    .sessions-header-text {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .sessions-header-text span:first-child {
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .sessions-header-text span:last-child {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .new-chat-btn {
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.7);
+      background: rgba(15, 23, 42, 0.9);
+      color: var(--text-main);
+      font-size: 12px;
+      padding: 6px 10px;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      cursor: pointer;
+    }
+
+    .new-chat-btn:hover {
+      border-color: var(--accent);
+    }
+
+    .sessions-list {
+      flex: 1;
+      overflow-y: auto;
+      margin-top: 4px;
+      padding-right: 4px;
+    }
+
+    .session-item {
+      border-radius: 10px;
+      padding: 8px 10px;
+      margin-bottom: 4px;
+      cursor: pointer;
+      border: 1px solid transparent;
+      background: rgba(15, 23, 42, 0.8);
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .session-item:hover {
+      border-color: rgba(148, 163, 184, 0.7);
+    }
+
+    .session-item.active {
+      border-color: var(--accent);
+      background: rgba(15, 23, 42, 0.95);
+    }
+
+    .session-item-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 6px;
+    }
+
+    .session-name {
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    .session-meta {
+      font-size: 10px;
+      color: var(--text-muted);
+    }
+
+    .session-empty {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 8px;
+    }
+
+    .session-delete-btn {
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      font-size: 14px;
+      cursor: pointer;
+      padding: 0 2px;
+      line-height: 1;
+    }
+
+    .session-delete-btn:hover {
+      color: #fca5a5;
+    }
+
+    /* Chat panel */
+
+    .chat-panel {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .messages {
+      flex: 1;
+      padding: 14px 18px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      scroll-behavior: smooth;
+    }
+
+    .messages-empty {
+      text-align: center;
+      margin-top: 18%;
+      color: var(--text-muted);
+      font-size: 14px;
+    }
+
+    .messages-empty strong {
+      color: var(--accent);
+      font-weight: 500;
+    }
+
+    .message-row {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      max-width: 85%;
+    }
+
+    .message-user {
+      align-self: flex-end;
+      text-align: right;
+    }
+
+    .message-bot {
+      align-self: flex-start;
+    }
+
+    .message-system {
+      align-self: center;
+    }
+
+    .message-bubble {
+      padding: 9px 12px;
+      border-radius: 14px;
+      font-size: 14px;
+      line-height: 1.5;
+      border: 1px solid rgba(148, 163, 184, 0.5);
+      background: rgba(15, 23, 42, 0.95);
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .message-user .message-bubble {
+      background: rgba(22, 163, 74, 0.16);
+      border-color: rgba(34, 197, 94, 0.7);
+    }
+
+    .message-bot .message-bubble {
+      background: rgba(15, 23, 42, 0.98);
+      border-color: rgba(56, 189, 248, 0.7);
+    }
+
+    .message-system .message-bubble {
+      background: rgba(30, 64, 175, 0.25);
+      border-color: rgba(129, 140, 248, 0.8);
+      font-size: 12px;
+    }
+
+    details.meta-details {
+      margin-top: 4px;
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    details.meta-details summary {
+      cursor: pointer;
+      list-style: none;
+      outline: none;
+    }
+
+    details.meta-details summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .meta-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 8px;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.5);
+      background: rgba(15, 23, 42, 0.9);
+    }
+
+    .meta-content {
+      margin-top: 4px;
+      padding: 6px;
+      border-radius: 8px;
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px dashed rgba(148, 163, 184, 0.5);
+      max-height: 220px;
+      overflow: auto;
+    }
+
+    .meta-content pre {
+      font-size: 11px;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .typing-indicator {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .dot {
+      width: 5px;
+      height: 5px;
+      border-radius: 999px;
+      background: var(--accent);
+      opacity: 0.5;
+      animation: blink 1s infinite ease-in-out;
+    }
+
+    .dot:nth-child(2) {
+      animation-delay: 0.2s;
+    }
+
+    .dot:nth-child(3) {
+      animation-delay: 0.4s;
+    }
+
+    @keyframes blink {
+      0%, 100% {
+        transform: translateY(0);
+        opacity: 0.4;
+      }
+      50% {
+        transform: translateY(-2px);
+        opacity: 1;
+      }
+    }
+
+    .chat-input-wrap {
+      padding: 10px 12px;
+      border-top: 1px solid var(--border);
+      background: radial-gradient(circle at top, rgba(15, 23, 42, 0.96), rgba(2, 6, 23, 0.96));
+    }
+
+    .chat-input-inner {
+      display: flex;
+      gap: 8px;
+      align-items: flex-end;
+    }
+
+    .chat-input {
+      flex: 1;
+      border-radius: 999px;
+      padding: 10px 14px;
+      font-size: 14px;
+      border: 1px solid rgba(148, 163, 184, 0.6);
+      background: rgba(2, 6, 23, 0.9);
+      color: var(--text-main);
+      outline: none;
+      resize: none;
+      max-height: 80px;
+      min-height: 40px;
+    }
+
+    .chat-input::placeholder {
+      color: #4b5563;
+    }
+
+    .chat-input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.4);
+    }
+
+    .send-btn {
+      border-radius: 999px;
+      border: none;
+      padding: 10px 16px;
+      font-size: 14px;
+      font-weight: 500;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: linear-gradient(135deg, var(--accent), #22c55e);
+      color: #020617;
+      cursor: pointer;
+      transition: transform 0.08s ease, box-shadow 0.08s ease, filter 0.08s ease;
+      white-space: nowrap;
+    }
+
+    .send-btn:disabled {
+      opacity: 0.6;
+      cursor: default;
+      transform: none;
+      box-shadow: none;
+    }
+
+    .send-btn:not(:disabled):hover {
+      filter: brightness(1.05);
+      box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.6);
+    }
+
+    .send-btn:not(:disabled):active {
+      transform: translateY(1px);
+      box-shadow: none;
+    }
+
+    .send-icon {
+      font-size: 14px;
+    }
+
+    .helper-text {
+      margin-top: 4px;
+      font-size: 11px;
+      color: var(--text-muted);
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .helper-pill {
+      padding: 2px 8px;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.6);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    @media (max-width: 900px) {
+      body {
+        padding: 8px;
+      }
+      .app {
+        border-radius: 18px;
+      }
+      .app-body {
+        flex-direction: column;
+      }
+      .sessions-panel {
+        width: 100%;
+        flex-direction: row;
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+        overflow-x: auto;
+      }
+      .sessions-panel {
+        height: 140px;
+      }
+      .sessions-list {
+        display: flex;
+        flex-direction: row;
+        gap: 6px;
+        margin-top: 0;
+      }
+      .session-item {
+        min-width: 160px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="app-header">
+      <div class="app-header-left">
+        <div class="logo">
+          <div class="logo-inner">V</div>
+        </div>
+        <div class="title-block">
+          <h1>
+            VIP Scoring Chatbot
+            <span class="badge">Demo · FastAPI</span>
+          </h1>
+          <p>Chat với agent chấm điểm lead & tổng hợp dữ liệu CSV.</p>
+        </div>
+      </div>
+      <div class="app-header-right">
+        <div id="api-status" class="api-status">Checking API...</div>
+        <div id="session-pill" class="session-pill">Session: -</div>
+      </div>
+    </header>
+
+    <div class="app-body">
+      <aside class="sessions-panel">
+        <div class="sessions-header">
+          <div class="sessions-header-text">
+            <span>Cuộc hội thoại</span>
+            <span>Quản lý bằng session_id</span>
+          </div>
+          <button id="new-chat-btn" class="new-chat-btn">
+            <span>＋</span> <span>New chat</span>
+          </button>
+        </div>
+        <div id="sessions-list" class="sessions-list"></div>
+        <div id="sessions-empty" class="session-empty" style="display:none;">
+          Chưa có cuộc hội thoại nào.
+        </div>
+      </aside>
+
+      <section class="chat-panel">
+        <div id="messages" class="messages"></div>
+
+        <div class="chat-input-wrap">
+          <form id="chat-form" class="chat-input-inner">
+            <textarea
+              id="chat-input"
+              class="chat-input"
+              placeholder="Nhập câu hỏi của bạn... (Enter để gửi, Shift+Enter để xuống dòng)"
+            ></textarea>
+            <button type="submit" id="send-btn" class="send-btn">
+              <span class="send-icon">➤</span>
+              <span>Gửi</span>
+            </button>
+          </form>
+          <div class="helper-text">
+            <span>Ví dụ: “Top lead VIP cần ưu tiên trong tuần này?”, “Thống kê lead theo nguồn & trạng thái”.</span>
+            <span class="helper-pill">POST /chat · JSON</span>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <script>
+    // ===== Config =====
+    const API_URL = "/chat"; // cùng host/port FastAPI
+
+    const STORAGE_KEY_SESSIONS = "vip_sessions";
+    const STORAGE_KEY_MESSAGES_PREFIX = "vip_session_messages_";
+
+    // ===== DOM =====
+    const messagesEl = document.getElementById("messages");
+    const sessionPillEl = document.getElementById("session-pill");
+    const apiStatusEl = document.getElementById("api-status");
+    const sessionsListEl = document.getElementById("sessions-list");
+    const sessionsEmptyEl = document.getElementById("sessions-empty");
+    const newChatBtnEl = document.getElementById("new-chat-btn");
+    const formEl = document.getElementById("chat-form");
+    const inputEl = document.getElementById("chat-input");
+    const sendBtnEl = document.getElementById("send-btn");
+
+    // ===== State =====
+    let sessions = [];
+    let currentSessionId = null;
+    let isSending = false;
+    let typingEl = null;
+
+    // ===== Storage helpers =====
+    function loadSessions() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY_SESSIONS);
+        return raw ? JSON.parse(raw) : [];
+      } catch (e) {
+        console.warn("Cannot parse sessions", e);
+        return [];
+      }
+    }
+
+    function saveSessions() {
+      try {
+        localStorage.setItem(STORAGE_KEY_SESSIONS, JSON.stringify(sessions));
+      } catch (e) {
+        console.warn("Cannot save sessions", e);
+      }
+    }
+
+    function messagesKey(id) {
+      return STORAGE_KEY_MESSAGES_PREFIX + id;
+    }
+
+    function loadMessages(sessionId) {
+      try {
+        const raw = localStorage.getItem(messagesKey(sessionId));
+        return raw ? JSON.parse(raw) : [];
+      } catch (e) {
+        console.warn("Cannot parse messages", e);
+        return [];
+      }
+    }
+
+    function saveMessages(sessionId, msgs) {
+      try {
+        localStorage.setItem(messagesKey(sessionId), JSON.stringify(msgs));
+      } catch (e) {
+        console.warn("Cannot save messages", e);
+      }
+    }
+
+    // ===== Session helpers =====
+    function genSessionId() {
+      return "s_" + Math.random().toString(36).slice(2, 10);
+    }
+
+    function createNewSession(activate = true) {
+      const id = genSessionId();
+      const now = new Date().toISOString();
+      const session = {
+        id,
+        name: "Chat " + (sessions.length + 1),
+        createdAt: now,
+        updatedAt: now,
+        hasTitle: false,
+      };
+      sessions.push(session);
+      saveSessions();
+      if (activate) {
+        setCurrentSession(id);
+      } else {
+        renderSessionList();
+      }
+      return session;
+    }
+
+    function findSession(id) {
+      return sessions.find((s) => s.id === id);
+    }
+
+    function touchSession(id, maybeUserText) {
+      const s = findSession(id);
+      if (!s) return;
+      s.updatedAt = new Date().toISOString();
+      if (maybeUserText && !s.hasTitle) {
+        const trimmed = maybeUserText.trim();
+        if (trimmed.length) {
+          s.name =
+            trimmed.length > 32 ? trimmed.slice(0, 32).trimEnd() + "…" : trimmed;
+          s.hasTitle = true;
+        }
+      }
+      saveSessions();
+      renderSessionList();
+    }
+
+    function setCurrentSession(id) {
+      currentSessionId = id;
+      sessionPillEl.textContent = "Session: " + id;
+      renderSessionList();
+      renderMessagesForCurrent();
+    }
+
+    function deleteSession(id) {
+      if (!confirm("Xoá cuộc hội thoại này?")) return;
+
+      const idx = sessions.findIndex((s) => s.id === id);
+      if (idx === -1) return;
+
+      // Xoá lịch sử messages
+      localStorage.removeItem(messagesKey(id));
+
+      // Xoá khỏi mảng session
+      sessions.splice(idx, 1);
+      saveSessions();
+
+      // Không còn session nào
+      if (!sessions.length) {
+        currentSessionId = null;
+        sessionPillEl.textContent = "Session: -";
+        renderSessionList();
+        clearMessagesUI();
+        renderEmptyState();
+        return;
+      }
+
+      // Nếu xoá session đang active -> chọn session mới nhất
+      if (currentSessionId === id) {
+        const sorted = [...sessions].sort(
+          (a, b) =>
+            new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+        );
+        currentSessionId = sorted[0].id;
+      }
+
+      sessionPillEl.textContent = "Session: " + currentSessionId;
+      renderSessionList();
+      renderMessagesForCurrent();
+    }
+
+    // ===== UI render =====
+    function renderSessionList() {
+      sessionsListEl.innerHTML = "";
+      if (!sessions.length) {
+        sessionsEmptyEl.style.display = "block";
+        return;
+      }
+      sessionsEmptyEl.style.display = "none";
+
+      // Sắp xếp theo updatedAt mới nhất
+      const sorted = [...sessions].sort((a, b) => {
+        return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
+      });
+
+      for (const s of sorted) {
+        const item = document.createElement("div");
+        item.className =
+          "session-item" + (s.id === currentSessionId ? " active" : "");
+
+        const header = document.createElement("div");
+        header.className = "session-item-header";
+
+        const textWrap = document.createElement("div");
+        const nameEl = document.createElement("div");
+        nameEl.className = "session-name";
+        nameEl.textContent = s.name;
+
+        const metaEl = document.createElement("div");
+        metaEl.className = "session-meta";
+        const created = new Date(s.createdAt);
+        metaEl.textContent =
+          "ID: " +
+          s.id +
+          " · " +
+          created.toLocaleString(undefined, {
+            hour: "2-digit",
+            minute: "2-digit",
+          });
+
+        textWrap.appendChild(nameEl);
+        textWrap.appendChild(metaEl);
+
+        const deleteBtn = document.createElement("button");
+        deleteBtn.className = "session-delete-btn";
+        deleteBtn.title = "Xoá cuộc hội thoại này";
+        deleteBtn.textContent = "×";
+
+        deleteBtn.addEventListener("click", (evt) => {
+          evt.stopPropagation();
+          deleteSession(s.id);
+        });
+
+        header.appendChild(textWrap);
+        header.appendChild(deleteBtn);
+
+        item.appendChild(header);
+
+        item.addEventListener("click", () => {
+          setCurrentSession(s.id);
+        });
+
+        sessionsListEl.appendChild(item);
+      }
+    }
+
+    function clearMessagesUI() {
+      messagesEl.innerHTML = "";
+    }
+
+    function renderEmptyState() {
+      const box = document.createElement("div");
+      box.className = "messages-empty";
+      box.innerHTML =
+        "<strong>Bắt đầu cuộc hội thoại mới 👋</strong><br/>" +
+        'Hãy hỏi: <em>"Top lead VIP cần ưu tiên tuần này?"</em> hoặc <em>"Thống kê lead theo nguồn"</em>.';
+      messagesEl.appendChild(box);
+    }
+
+    function renderMessagesForCurrent() {
+      clearMessagesUI();
+      if (!currentSessionId) return;
+      const msgs = loadMessages(currentSessionId);
+      if (!msgs.length) {
+        renderEmptyState();
+        return;
+      }
+      for (const m of msgs) {
+        appendMessageToUI(m);
+      }
+      scrollToBottom();
+    }
+
+    function scrollToBottom() {
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+    }
+
+    function setLoading(loading) {
+      isSending = loading;
+      sendBtnEl.disabled = loading;
+      inputEl.disabled = loading;
+
+      if (loading) {
+        if (typingEl) return;
+        typingEl = document.createElement("div");
+        typingEl.className = "message-row message-bot message-system";
+        typingEl.innerHTML = `
+          <div class="message-bubble">
+            <div class="typing-indicator">
+              <span>Agent đang suy nghĩ</span>
+              <div class="dot"></div>
+              <div class="dot"></div>
+              <div class="dot"></div>
+            </div>
+          </div>
+        `;
+        messagesEl.appendChild(typingEl);
+        scrollToBottom();
+      } else {
+        if (typingEl) {
+          typingEl.remove();
+          typingEl = null;
+        }
+      }
+    }
+
+    function appendMessageToUI(message) {
+      const { role, text, meta } = message;
+
+      const row = document.createElement("div");
+      let cssRole = "system";
+      if (role === "user") cssRole = "user";
+      if (role === "bot") cssRole = "bot";
+      row.className = "message-row message-" + cssRole;
+
+      const bubble = document.createElement("div");
+      bubble.className = "message-bubble";
+      bubble.textContent = text;
+      row.appendChild(bubble);
+
+      if (
+        role === "bot" &&
+        meta &&
+        ((meta.sources && meta.sources.length) ||
+          (meta.useful_info && Object.keys(meta.useful_info).length) ||
+          (meta.priority_chain && meta.priority_chain.length))
+      ) {
+        const details = document.createElement("details");
+        details.className = "meta-details";
+
+        const summary = document.createElement("summary");
+        const badge = document.createElement("span");
+        badge.className = "meta-badge";
+        badge.textContent = "📊 Xem dữ liệu liên quan";
+        summary.appendChild(badge);
+        details.appendChild(summary);
+
+        const metaContent = document.createElement("div");
+        metaContent.className = "meta-content";
+
+        const pre = document.createElement("pre");
+        pre.textContent = JSON.stringify(
+          {
+            sources: meta.sources || [],
+            useful_info: meta.useful_info || {},
+            priority_chain: meta.priority_chain || [],
+          },
+          null,
+          2
+        );
+
+        metaContent.appendChild(pre);
+        details.appendChild(metaContent);
+        row.appendChild(details);
+      }
+
+      messagesEl.appendChild(row);
+    }
+
+    function addMessage(text, role, meta) {
+      if (!currentSessionId) return;
+      const msg = {
+        role,
+        text,
+        meta: meta || null,
+        ts: new Date().toISOString(),
+      };
+
+      const msgs = loadMessages(currentSessionId);
+      msgs.push(msg);
+      saveMessages(currentSessionId, msgs);
+
+      if (role === "user") {
+        touchSession(currentSessionId, text);
+      } else {
+        touchSession(currentSessionId, null);
+      }
+
+      appendMessageToUI(msg);
+      scrollToBottom();
+    }
+
+    // ===== API =====
+    async function pingApi() {
+      try {
+        const rootRes = await fetch("/");
+        apiStatusEl.textContent =
+          rootRes.ok ? "API: online ✔" : "API: HTTP " + rootRes.status;
+      } catch (err) {
+        apiStatusEl.textContent = "API: không kết nối được";
+      }
+    }
+
+    async function sendMessageToApi(userText) {
+      if (!userText || !userText.trim()) return;
+      if (!currentSessionId) {
+        createNewSession(true);
+      }
+      const text = userText.trim();
+
+      addMessage(text, "user");
+      setLoading(true);
+
+      try {
+        const payload = {
+          session_id: currentSessionId,
+          question: text,
+        };
+
+        const res = await fetch(API_URL, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
+        });
+
+        if (!res.ok) {
+          throw new Error("HTTP " + res.status);
+        }
+
+        const data = await res.json();
+        const reply = data.reply || "(Agent không trả lời gì)";
+        const meta = {
+          sources: Array.isArray(data.sources) ? data.sources : [],
+          useful_info: data.useful_info || {},
+          priority_chain: data.priority_chain || [],
+        };
+
+        addMessage(reply, "bot", meta);
+      } catch (err) {
+        addMessage("Có lỗi khi gọi API /chat: " + err.message, "system");
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    // ===== Events =====
+    formEl.addEventListener("submit", function (e) {
+      e.preventDefault();
+      if (isSending) return;
+      const value = inputEl.value;
+      inputEl.value = "";
+      sendMessageToApi(value);
+    });
+
+    inputEl.addEventListener("keydown", function (e) {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        formEl.requestSubmit();
+      }
+    });
+
+    newChatBtnEl.addEventListener("click", function () {
+      if (isSending) return;
+      createNewSession(true);
+      inputEl.focus();
+    });
+
+    // ===== Init =====
+    (function init() {
+      sessions = loadSessions();
+      if (!sessions.length) {
+        createNewSession(true);
+      } else {
+        const sorted = [...sessions].sort(
+          (a, b) =>
+            new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+        );
+        sessions = sorted;
+        saveSessions();
+        setCurrentSession(sorted[0].id);
+      }
+      pingApi();
+      inputEl.focus();
+    })();
+  </script>
+</body>
+</html>

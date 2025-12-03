@@ -1,0 +1,2 @@
+source,status,is_vip,no_of_employees,city,score,qualification_status,explain
+,,1,,Bắc Ninh,98,Qualified,Lead có is_vip là 1 và tỷ lệ Qualified cao hơn 8% so với Junk và Unqualified trong cột city
