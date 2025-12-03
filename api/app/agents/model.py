@@ -7,7 +7,7 @@ from typing import Any, Dict, Optional, Tuple, List
 from collections import defaultdict
 
 import pandas as pd
-
+from itertools import combinations
 from app.llm import chat_completion
 from app.config import load_config
 
@@ -212,73 +212,69 @@ def _normalize_stat_value(value: Any):
 
 def calculate_statistics(df: pd.DataFrame, input_record: Dict[str, Any]) -> dict:
     """
-    Tính toán tỷ lệ phần trăm của qualification_status cho mỗi GIÁ TRỊ
-    trong các cột hữu ích (USEFUL_COLS) dựa trên 1 record đầu vào.
+    Tính thống kê SỐ LƯỢNG nhãn cho các tổ hợp 2..5 cột (combos),
+    lọc đúng cấu hình của lead.
 
-    ⚠️ Lưu ý: hàm này được thiết kế để chịu được input_record "bẩn"
-    (giá trị là list/ndarray/Series rỗng, v.v.).
+    Trả về:
+    {
+        "combos": [
+            {
+                "features": [...],
+                "values": [...],
+                "total": ...,
+                "Junk": ...,
+                "Unqualified": ...,
+                "Qualified": ...
+            },
+            ...
+        ]
+    }
     """
-    statistics: Dict[str, Dict[str, Dict[str, Any]]] = {}
 
-    # Cho phép input_record là dict HOẶC pandas.Series
-    if isinstance(input_record, pd.Series):
-        input_dict = input_record.to_dict()
-    else:
-        input_dict = dict(input_record)  # copy để tránh sửa original
+    MAX_COMBO_SIZE = 5   # tổ hợp tối đa 5 cột
+    MIN_TOTAL = 3        # tổ hợp có < 3 bản ghi thì bỏ qua
 
-    for column in USEFUL_COLS:
-        # Bỏ qua nếu CSV không có cột này
-        if column not in df.columns:
-            continue
+    cols = [
+        c for c in USEFUL_COLS
+        if c in df.columns and c in input_record and pd.notna(input_record[c])
+    ]
 
-        raw_value = input_dict.get(column, None)
-        target_value = _normalize_stat_value(raw_value)
+    def count_labels(filtered: pd.DataFrame) -> Dict[str, int]:
+        """Đếm số lượng từng nhãn trong qualification_status."""
+        counts = {"Junk": 0, "Unqualified": 0, "Qualified": 0}
+        vc = filtered["qualification_status"].value_counts()
+        for label in counts.keys():
+            counts[label] = int(vc.get(label, 0))
+        return counts
 
-        # Nếu sau khi chuẩn hoá vẫn không có giá trị → bỏ qua cột
-        if target_value is None:
-            continue
+    statistics: Dict[str, Any] = {
+        "combos": [],
+    }
 
-        # Lọc những dòng trong CSV có cùng giá trị ở cột này
-        filtered_df = df[df[column] == target_value]
+    # Chỉ tính combos (2..5 cột)
+    max_k = min(MAX_COMBO_SIZE, len(cols))
+    for k in range(2, max_k + 1):
+        for subset in combinations(cols, k):
+            mask = pd.Series(True, index=df.index)
+            for c in subset:
+                mask &= (df[c] == input_record[c])
 
-        if filtered_df.empty:
-            # Không có mẫu nào trùng → cũng không cần thống kê
-            continue
-
-        # Khởi tạo cấu trúc lưu thống kê cho giá trị này
-        col_stats = {
-            str(target_value): {
-                "Junk": 0,
-                "Unqualified": 0,
-                "Qualified": 0,
-                "total": 0,
-            }
-        }
-
-        # Đếm số lượng từng nhãn
-        for label, count in filtered_df["qualification_status"].value_counts().items():
-            if label not in {"Junk", "Unqualified", "Qualified"}:
+            filtered_df = df[mask]
+            total = int(len(filtered_df))
+            if total < MIN_TOTAL:
                 continue
-            col_stats[str(target_value)][label] += int(count)
-            col_stats[str(target_value)]["total"] += int(count)
 
-        # Tính % cho từng nhãn
-        stats_for_value = col_stats[str(target_value)]
-        total = stats_for_value["total"]
-        if total > 0:
-            stats_for_value["Junk_percent"] = stats_for_value["Junk"] / total * 100
-            stats_for_value["Unqualified_percent"] = (
-                stats_for_value["Unqualified"] / total * 100
-            )
-            stats_for_value["Qualified_percent"] = (
-                stats_for_value["Qualified"] / total * 100
-            )
-            # để thuận tay LLM, giữ lại *_count
-            stats_for_value["Junk_count"] = stats_for_value["Junk"]
-            stats_for_value["Unqualified_count"] = stats_for_value["Unqualified"]
-            stats_for_value["Qualified_count"] = stats_for_value["Qualified"]
+            label_count = count_labels(filtered_df)
 
-        statistics[column] = col_stats
+            combo_entry = {
+                "features": list(subset),
+                "values": [input_record[c] for c in subset],
+                "total": total,
+                "Junk": label_count["Junk"],
+                "Unqualified": label_count["Unqualified"],
+                "Qualified": label_count["Qualified"],
+            }
+            statistics["combos"].append(combo_entry)
 
     return statistics
 def extract_info_from_text(text: str) -> Tuple[Dict[str, Any], str]:
@@ -365,57 +361,94 @@ def build_input_record_for_llm(raw_record: Dict[str, Any]) -> Dict[str, Any]:
     return record
 
 
-def build_model_prompt(statistics: Dict[str, Any],
-                       input_record: Dict[str, Any],
-                       total_status_count: dict) -> str:
+def build_model_prompt(
+    statistics: Dict[str, Any],
+    input_record: Dict[str, Any],
+    total_status_count: dict,
+) -> str:
     """
-    Xây dựng prompt gửi tới LLM (giữ nguyên nội dung như trong evaluate_llm.py).
+    Xây dựng prompt gửi LLM chấm điểm lead.
+
+    - Sử dụng thống kê SỐ LƯỢNG:
+        + combos: tổ hợp nhiều cột (2–5 cột) theo các trường: source, status, is_vip, no_of_employees, city.
+    - LLM chỉ được trả về 1 JSON: qualification_status, score, explain.
     """
-    prompt = f"\nDữ liệu của lead cần chấm:\n{json.dumps(input_record, ensure_ascii=False)}\n"
+
+    combo_stats = statistics.get("combos", [])
+
+    qs_count = total_status_count.get("qualification_status_count", {})
+    total_all = total_status_count.get("total_count", 0)
+
+    prompt = ""
+
+    # 1. Thông tin lead & thống kê global
+    prompt += "Bạn là hệ thống chấm điểm lead B2B dựa trên dữ liệu lịch sử.\n"
     prompt += (
-        "Bạn là một hệ thống chấm điểm chất lượng lead chuyên nghiệp và thẳng thắn.\n\n"
-        "Dưới đây là thông tin thống kê cho lead bạn hãy *bám sát vào thông tin và mô tả sau* để xác định nhãn chính xác:\n"
+        "Mục tiêu: chọn một trong 3 nhãn cuối cùng cho lead: Junk, Unqualified hoặc Qualified "
+        "và cho điểm từ 0 đến 100.\n\n"
     )
-    # Tổng số bản ghi trong qualification_status
+
+    prompt += "Thông tin lead hiện tại (các trường quan trọng như source, status, is_vip, no_of_employees, city):\n"
+    prompt += json.dumps(input_record, ensure_ascii=False)
+    prompt += "\n\n"
+
+    prompt += "Thống kê toàn cục theo qualification_status trên toàn bộ dữ liệu:\n"
+    prompt += f"- Junk: {qs_count.get('Junk', 0)} bản ghi\n"
+    prompt += f"- Unqualified: {qs_count.get('Unqualified', 0)} bản ghi\n"
+    prompt += f"- Qualified: {qs_count.get('Qualified', 0)} bản ghi\n"
+    prompt += f"- Tổng cộng: {total_all} bản ghi\n\n"
+
+    # 2. Thống kê combos
     prompt += (
-        f"Tổng số bản ghi trong qualification_status:\n"
-        f"Junk: {total_status_count['qualification_status_count'].get('Junk', 0)}\n"
-        f"Unqualified: {total_status_count['qualification_status_count'].get('Unqualified', 0)}\n"
-        f"Qualified: {total_status_count['qualification_status_count'].get('Qualified', 0)}\n"
-        f"Tổng cộng: {total_status_count['total_count']}\n\n"
+        "Thống kê theo tổ hợp nhiều cột (combo_feature_stats), đã lọc đúng cấu hình của lead "
+        "dựa trên các trường source, status, is_vip, no_of_employees, city.\n"
+        "Mỗi phần tử có dạng:\n"
+        '{ "features": [...], "values": [...], "total": ..., "Junk": ..., "Unqualified": ..., "Qualified": ... }\n'
+        "Dưới đây là danh sách các combo tương ứng với lead này:\n"
     )
-    # Thống kê từng cột hữu ích (5 cột USEFUL_COLS)
-    for column, column_stats in statistics.items():
-        if column in USEFUL_COLS:
-            for value, stats in column_stats.items():
-                if value == "total":
-                    continue
-                prompt += (
-                    f"- Tỷ lệ {value} trong cột {column}: "
-                    f"Junk = {stats['Junk_percent']}% ({stats['Junk_count']} bản ghi), "
-                    f"Unqualified = {stats['Unqualified_percent']}% ({stats['Unqualified_count']} bản ghi), "
-                    f"Qualified = {stats['Qualified_percent']}% ({stats['Qualified_count']} bản ghi)\n"
-                )
-    # Hướng dẫn ra quyết định và yêu cầu đầu ra (giữ nguyên prompt)
-    prompt += """
-    Dựa trên thông tin thống kê trên, bạn hãy:
-    1. Dựa vào tần suất và số lượng các nhãn so với nhãn tổng trong các lead tương tự để xác định nhãn cuối cùng cho lead này (Junk, Unqualified, Qualified).
-    2. Nhãn cuối cùng là **Qualified** khi is_vip là 1 hoặc **% Qualified** lệch so với %Junk hoặc %Unqualified trên 8% và số lượng lệch từ 3 cột trở lên mới có thể được phân loại là **Qualified**.
-    2. Nếu xác định **không phải là Qualified**, bạn cần **xem xét kỹ** số lượng các cột có tỷ lệ % nhãn Junk hay Unqualified cao hơn để đưa ra quyết định cuối cùng.
-    3. Đưa ra điểm số cuối cùng cho lead này từ 0-100.
-    
-    Mức điểm:
-    - **0-39**: Nhãn **"Junk"** – Lead này không đủ điều kiện, hoặc có khả năng chuyển đổi rất thấp. Có thể là lead không có giá trị hoặc thông tin không chính xác.
-    - **40-79**: Nhãn **"Unqualified"** – Lead này chưa đủ điều kiện nhưng có khả năng cải thiện và có thể trở thành khách hàng tiềm năng trong tương lai.
-    - **80-100**: Nhãn **"Qualified"** – Lead này đủ điều kiện và có khả năng cao để chuyển đổi thành khách hàng. Đây là các lead tiềm năng có thể chuyển đổi thành doanh thu.
-    Đầu ra yêu cầu:
-    - "score": số nguyên từ 0 đến 100.
-    - "qualification_status": một trong các nhãn "Junk", "Unqualified", "Qualified".
-    - "explain": một câu giải thích ngắn về lý do phân loại và chấm điểm.
-    Chỉ trả về duy nhất một JSON một dòng chứa ba trường: 
-        {"score": <số nguyên từ 0 đến 100>, "qualification_status": "Junk|Unqualified|Qualified", "explain": "lý do ngắn gọn"}. 
-        Không trả về thêm bất kỳ văn bản nào ngoài JSON này.
-    """
+    prompt += json.dumps(combo_stats, ensure_ascii=False)
+    prompt += "\n\n"
+
+    # 3. Hướng dẫn chấm điểm – CHỈ DỰA TRÊN COMBO
+    prompt += (
+        "HƯỚNG DẪN CHẤM ĐIỂM (chỉ dựa trên combo_feature_stats, không dùng bất kỳ thông tin nào khác ngoài dữ liệu đã cho):\n"
+        "1) Đối với từng combo trong combo_feature_stats:\n"
+        "   - So sánh số lượng Junk, Unqualified, Qualified.\n"
+        "   - Nhãn nào có số lượng lớn nhất thì combo đó được xem là nghiêng về nhãn đó.\n"
+        "   - Nếu số lượng khá sát nhau (chênh lệch không đáng kể) thì coi combo đó là tín hiệu yếu.\n\n"
+        "2) Tổng hợp tín hiệu từ tất cả combo:\n"
+        "   - Đếm xem có bao nhiêu combo nghiêng rõ rệt về Junk, bao nhiêu combo nghiêng rõ rệt về Unqualified,\n"
+        "     và bao nhiêu combo nghiêng rõ rệt về Qualified.\n"
+        "   - Combo có chứa is_vip, no_of_employees, city được coi là quan trọng hơn combo chỉ có source/status.\n\n"
+        "3) Quy tắc BẢO THỦ cho nhãn Qualified:\n"
+        "   - Nếu is_vip = 1 và KHÔNG có nhiều combo mạnh nghiêng về Junk → bạn có thể xem Qualified là ứng viên chính.\n"
+        "   - Nếu is_vip = 0 thì CHỈ gán nhãn Qualified khi:\n"
+        "       + Có NHIỀU combo (ví dụ từ 3 combo trở lên) trong đó số lượng Qualified lớn hơn rõ rệt hai nhãn còn lại,\n"
+        "         và các combo này có chứa các trường quan trọng (như is_vip, no_of_employees, city),\n"
+        "       + Đồng thời không có nhóm combo nào nghiêng mạnh về Junk.\n\n"
+        "4) Nếu không thỏa điều kiện để gán nhãn Qualified:\n"
+        "   - Nếu phần lớn combo mạnh nghiêng về Junk → chọn Junk.\n"
+        "   - Nếu không nghiêng rõ về Junk nhưng nhiều combo cho thấy Unqualified lớn hơn Qualified → chọn Unqualified.\n"
+        "   - Nếu tín hiệu rất lẫn lộn, hãy ưu tiên Unqualified (trừ khi có lý do rất mạnh cho Junk).\n\n"
+        "5) Chấm điểm (score 0–100) theo mức độ chắc chắn:\n"
+        "   - Nếu nhãn cuối cùng là Qualified:\n"
+        "       + Nếu rất nhiều combo ủng hộ rõ rệt → score cao (80–100).\n"
+        "       + Nếu chỉ hơi nghiêng nhưng vẫn đủ điều kiện → score trung bình cao (60–80).\n"
+        "   - Nếu nhãn cuối cùng là Unqualified → score khoảng 40–70 tùy mức độ trung tính.\n"
+        "   - Nếu nhãn cuối cùng là Junk:\n"
+        "       + Nếu nhiều combo ủng hộ rõ rệt → score thấp (0–30).\n"
+        "       + Nếu chỉ hơi nghiêng → score khoảng 30–40.\n\n"
+        "6) ĐẦU RA (BẮT BUỘC):\n"
+        "   - Chỉ trả về DUY NHẤT MỘT ĐỐI TƯỢNG JSON, không thêm bất kỳ chữ nào trước hoặc sau JSON.\n"
+        "   - JSON phải đúng định dạng sau:\n"
+        '     {"qualification_status": "...", "score": ..., "explain": "..."}\n'
+        "     trong đó:\n"
+        '       - \"qualification_status\": một trong 3 giá trị \"Junk\", \"Unqualified\", \"Qualified\";\n'
+        '       - \"score\": số nguyên từ 0 đến 100;\n'
+        '       - \"explain\": vài câu tiếng Việt, giải thích ngắn gọn lý do chọn nhãn và điểm, '
+        "nhấn mạnh các combo quan trọng mà bạn dựa vào.\n"
+    )
+
     return prompt
 
 

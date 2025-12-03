@@ -1,6 +1,6 @@
 llm:
   base_url: "https://api.groq.com/openai/v1"
-  api_key: "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"
+  api_key: "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"
   model: "llama-3.3-70b-versatile"
   temperature: 0.7
 
