@@ -417,6 +417,234 @@
       }
     }
 
+    /* CSV upload card */
+
+    .csv-upload-card {
+      margin: 0 18px 6px;
+      padding: 10px 12px;
+      border-radius: 16px;
+      border: 1px dashed var(--border);
+      background: rgba(15, 23, 42, 0.9);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      font-size: 12px;
+    }
+
+    .csv-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .csv-title {
+      font-weight: 500;
+      color: var(--text-main);
+      font-size: 13px;
+    }
+
+    .csv-tag {
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 999px;
+      border: 1px solid rgba(56, 189, 248, 0.5);
+      color: #e0f2fe;
+      background: rgba(56, 189, 248, 0.1);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .csv-desc {
+      margin: 0;
+      color: var(--text-muted);
+      font-size: 11px;
+      line-height: 1.4;
+    }
+
+    .csv-desc code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+        "Liberation Mono", "Courier New", monospace;
+      font-size: 11px;
+      padding: 1px 4px;
+      border-radius: 4px;
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid rgba(30, 64, 175, 0.7);
+      color: #e0f2fe;
+    }
+
+    .csv-controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .csv-controls input[type="file"] {
+      font-size: 11px;
+      max-width: 260px;
+      color: var(--text-main);
+    }
+
+    .csv-btn {
+      border-radius: 999px;
+      border: none;
+      padding: 8px 14px;
+      font-size: 12px;
+      font-weight: 500;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--accent-soft);
+      color: var(--accent);
+      cursor: pointer;
+      transition: background 0.12s ease, transform 0.08s ease;
+    }
+
+    .csv-btn:hover:not(:disabled) {
+      background: rgba(56, 189, 248, 0.25);
+      transform: translateY(-0.5px);
+    }
+
+    .csv-btn:disabled {
+      opacity: 0.6;
+      cursor: default;
+    }
+
+    .csv-status {
+      margin: 0;
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    /* Analytics dashboard */
+
+    .analytics-dashboard {
+      margin-top: 6px;
+      padding: 10px 12px;
+      border-radius: 14px;
+      border: 1px solid rgba(56, 189, 248, 0.4);
+      background: radial-gradient(
+        circle at top left,
+        rgba(15, 23, 42, 0.98),
+        rgba(2, 6, 23, 0.96)
+      );
+    }
+
+    .analytics-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 6px;
+    }
+
+    .analytics-title {
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .analytics-tag {
+      font-size: 10px;
+      padding: 1px 6px;
+      border-radius: 999px;
+      border: 1px solid rgba(56, 189, 248, 0.7);
+      color: #e0f2fe;
+      background: rgba(56, 189, 248, 0.12);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .analytics-metrics {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+
+    .metric-card {
+      flex: 1 1 90px;
+      padding: 6px 8px;
+      border-radius: 10px;
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid rgba(148, 163, 184, 0.5);
+    }
+
+    .metric-label {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-bottom: 2px;
+    }
+
+    .metric-value {
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    .metric-sub {
+      font-size: 10px;
+      color: var(--text-muted);
+      margin-top: 1px;
+    }
+
+    .analytics-section-title {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin: 4px 0 2px;
+    }
+
+    .analytics-bars {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      margin-top: 2px;
+    }
+
+    .bar-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 10px;
+    }
+
+    .bar-label {
+      flex: 0 0 90px;
+      color: var(--text-muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .bar-track {
+      flex: 1;
+      height: 5px;
+      border-radius: 999px;
+      background: rgba(15, 23, 42, 1);
+      border: 1px solid rgba(30, 64, 175, 0.6);
+      overflow: hidden;
+    }
+
+    .bar-fill {
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(
+        90deg,
+        rgba(56, 189, 248, 0.95),
+        rgba(34, 197, 94, 0.9)
+      );
+    }
+
+    .bar-value {
+      flex: 0 0 auto;
+      font-size: 10px;
+      color: var(--text-muted);
+    }
+
+    .analytics-empty {
+      font-size: 10px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
     .chat-input-wrap {
       padding: 10px 12px;
       border-top: 1px solid var(--border);
@@ -537,6 +765,15 @@
       .session-item {
         min-width: 160px;
       }
+      .csv-upload-card {
+        margin: 0 12px 6px;
+      }
+      .analytics-dashboard {
+        padding: 8px 10px;
+      }
+      .bar-label {
+        flex: 0 0 70px;
+      }
     }
   </style>
 </head>
@@ -581,6 +818,26 @@
       <section class="chat-panel">
         <div id="messages" class="messages"></div>
 
+        <!-- Card upload CSV -->
+        <div class="csv-upload-card">
+          <div class="csv-header">
+            <div class="csv-title">Chấm điểm nhanh từ CSV</div>
+            <span class="csv-tag">CSV · Beta</span>
+          </div>
+          <p class="csv-desc">
+            Tải lên file <code>.csv</code> chứa danh sách lead. Hệ thống sẽ chấm điểm
+            và trả lại file đã bổ sung các cột <code>score</code>,
+            <code>qualification_status</code>, <code>explain</code>.
+          </p>
+          <div class="csv-controls">
+            <input type="file" id="csv-file" accept=".csv" />
+            <button type="button" id="csv-upload-btn" class="csv-btn">
+              Chấm điểm CSV
+            </button>
+          </div>
+          <p id="csv-status" class="csv-status"></p>
+        </div>
+
         <div class="chat-input-wrap">
           <form id="chat-form" class="chat-input-inner">
             <textarea
@@ -605,6 +862,7 @@
   <script>
     // ===== Config =====
     const API_URL = "/chat"; // cùng host/port FastAPI
+    const SCORE_CSV_URL = "/score/csv";
 
     const STORAGE_KEY_SESSIONS = "vip_sessions";
     const STORAGE_KEY_MESSAGES_PREFIX = "vip_session_messages_";
@@ -619,6 +877,10 @@
     const formEl = document.getElementById("chat-form");
     const inputEl = document.getElementById("chat-input");
     const sendBtnEl = document.getElementById("send-btn");
+
+    const csvFileInput = document.getElementById("csv-file");
+    const csvUploadBtn = document.getElementById("csv-upload-btn");
+    const csvStatusEl = document.getElementById("csv-status");
 
     // ===== State =====
     let sessions = [];
@@ -881,6 +1143,203 @@
       }
     }
 
+    function setCsvStatus(msg, isError = false) {
+      if (!csvStatusEl) return;
+      csvStatusEl.textContent = msg || "";
+      if (isError) {
+        csvStatusEl.style.color = "#fca5a5";
+      } else {
+        csvStatusEl.style.color = "var(--text-muted)";
+      }
+    }
+
+    async function uploadAndScoreCsv() {
+      if (!csvFileInput || !csvUploadBtn) return;
+      const file = csvFileInput.files && csvFileInput.files[0];
+
+      if (!file) {
+        setCsvStatus("Vui lòng chọn file CSV trước.", true);
+        return;
+      }
+
+      if (!currentSessionId) {
+        // đảm bảo luôn có session để lưu log / file
+        createNewSession(true);
+      }
+
+      csvUploadBtn.disabled = true;
+      setCsvStatus("Đang upload và chấm điểm CSV...");
+
+      try {
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("session_id", currentSessionId);
+
+        const res = await fetch(SCORE_CSV_URL, {
+          method: "POST",
+          body: formData,
+        });
+
+        if (!res.ok) {
+          let msg = "Có lỗi khi gọi API /score/csv";
+          try {
+            const errData = await res.json();
+            if (errData && errData.detail) {
+              msg = errData.detail;
+            }
+          } catch (e) {
+            // ignore parse error
+          }
+          throw new Error(msg);
+        }
+
+        const blob = await res.blob();
+        const downloadName = `scored_${file.name || "leads.csv"}`;
+        const url = window.URL.createObjectURL(blob);
+
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = downloadName;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(url);
+
+        setCsvStatus("Đã chấm xong, file đã được tải về.");
+      } catch (err) {
+        setCsvStatus(err.message || "Có lỗi không xác định.", true);
+      } finally {
+        csvUploadBtn.disabled = false;
+      }
+    }
+
+    // ===== Analytics dashboard builder =====
+    function createAnalyticsDashboard(summary) {
+      if (!summary || !summary.session_summary) return null;
+
+      const sessionSummary = summary.session_summary || {};
+      const total = sessionSummary.total_leads || 0;
+      const avgScore =
+        typeof sessionSummary.avg_score === "number"
+          ? sessionSummary.avg_score
+          : null;
+      const vipRatio =
+        typeof sessionSummary.vip_ratio === "number"
+          ? sessionSummary.vip_ratio
+          : null;
+
+      const dash = document.createElement("div");
+      dash.className = "analytics-dashboard";
+
+      // Header
+      const header = document.createElement("div");
+      header.className = "analytics-header";
+      const title = document.createElement("div");
+      title.className = "analytics-title";
+      title.textContent = "Tổng quan dữ liệu session hiện tại";
+      const tag = document.createElement("span");
+      tag.className = "analytics-tag";
+      tag.textContent = "Analytics";
+      header.appendChild(title);
+      header.appendChild(tag);
+      dash.appendChild(header);
+
+      // Metric cards
+      const metrics = document.createElement("div");
+      metrics.className = "analytics-metrics";
+
+      const mTotal = document.createElement("div");
+      mTotal.className = "metric-card";
+      mTotal.innerHTML = `
+        <div class="metric-label">Tổng số lead</div>
+        <div class="metric-value">${total}</div>
+      `;
+      metrics.appendChild(mTotal);
+
+      const mAvg = document.createElement("div");
+      mAvg.className = "metric-card";
+      mAvg.innerHTML = `
+        <div class="metric-label">Điểm trung bình</div>
+        <div class="metric-value">${
+          avgScore !== null ? avgScore.toFixed(1) : "-"
+        }</div>
+      `;
+      metrics.appendChild(mAvg);
+
+      const mVip = document.createElement("div");
+      mVip.className = "metric-card";
+      const vipPercent = vipRatio !== null ? Math.round(vipRatio * 100) : null;
+      mVip.innerHTML = `
+        <div class="metric-label">% lead VIP (is_vip = 1)</div>
+        <div class="metric-value">${
+          vipPercent !== null ? vipPercent + "%" : "-"
+        }</div>
+      `;
+      metrics.appendChild(mVip);
+
+      dash.appendChild(metrics);
+
+      // Helper tạo bar list
+      function addBarSection(titleText, dataObj) {
+        const sectionTitle = document.createElement("div");
+        sectionTitle.className = "analytics-section-title";
+        sectionTitle.textContent = titleText;
+        dash.appendChild(sectionTitle);
+
+        const container = document.createElement("div");
+        container.className = "analytics-bars";
+
+        const entries = Object.entries(dataObj || {});
+        if (!entries.length) {
+          const empty = document.createElement("div");
+          empty.className = "analytics-empty";
+          empty.textContent = "Không có dữ liệu.";
+          container.appendChild(empty);
+        } else {
+          const maxVal = Math.max(
+            ...entries.map(([_, v]) => (typeof v === "number" ? v : 0))
+          );
+          entries.forEach(([label, value]) => {
+            const row = document.createElement("div");
+            row.className = "bar-row";
+
+            const lbl = document.createElement("div");
+            lbl.className = "bar-label";
+            lbl.textContent = label;
+
+            const track = document.createElement("div");
+            track.className = "bar-track";
+
+            const fill = document.createElement("div");
+            fill.className = "bar-fill";
+            const width = maxVal > 0 ? (value / maxVal) * 100 : 0;
+            fill.style.width = width + "%";
+            track.appendChild(fill);
+
+            const val = document.createElement("div");
+            val.className = "bar-value";
+            val.textContent = value;
+
+            row.appendChild(lbl);
+            row.appendChild(track);
+            row.appendChild(val);
+            container.appendChild(row);
+          });
+        }
+
+        dash.appendChild(container);
+      }
+
+      addBarSection(
+        "Theo trạng thái (qualification_status)",
+        sessionSummary.by_status
+      );
+      addBarSection("Top nguồn (source)", sessionSummary.by_source_top5);
+      addBarSection("Top thành phố (city)", sessionSummary.by_city_top5);
+
+      return dash;
+    }
+
     function appendMessageToUI(message) {
       const { role, text, meta } = message;
 
@@ -895,6 +1354,24 @@
       bubble.textContent = text;
       row.appendChild(bubble);
 
+      // Nếu là câu trả lời analytics -> vẽ dashboard ngay bên dưới bubble
+      let analyticsDash = null;
+      if (
+        role === "bot" &&
+        meta &&
+        meta.useful_info &&
+        meta.useful_info.intent === "analytics" &&
+        meta.useful_info.analytics_summary
+      ) {
+        analyticsDash = createAnalyticsDashboard(
+          meta.useful_info.analytics_summary
+        );
+      }
+      if (analyticsDash) {
+        row.appendChild(analyticsDash);
+      }
+
+      // Khung debug JSON
       if (
         role === "bot" &&
         meta &&
@@ -905,12 +1382,12 @@
         const details = document.createElement("details");
         details.className = "meta-details";
 
-        const summary = document.createElement("summary");
+        const summaryEl = document.createElement("summary");
         const badge = document.createElement("span");
         badge.className = "meta-badge";
-        badge.textContent = "📊 Xem dữ liệu liên quan";
-        summary.appendChild(badge);
-        details.appendChild(summary);
+        badge.textContent = "📎 Dữ liệu thô (debug)";
+        summaryEl.appendChild(badge);
+        details.appendChild(summaryEl);
 
         const metaContent = document.createElement("div");
         metaContent.className = "meta-content";
@@ -1033,6 +1510,13 @@
       createNewSession(true);
       inputEl.focus();
     });
+
+    if (csvUploadBtn) {
+      csvUploadBtn.addEventListener("click", function () {
+        if (isSending) return;
+        uploadAndScoreCsv();
+      });
+    }
 
     // ===== Init =====
     (function init() {

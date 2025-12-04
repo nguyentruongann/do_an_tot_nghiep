@@ -587,53 +587,72 @@ def _score_with_dataset_or_fallback(raw_record: Dict[str, Any]) -> Tuple[int, st
 def score_rows_and_save(session_id: str, rows: List[Dict[str, Any]]) -> Dict[str, Any]:
     """
     Dùng cho endpoint /score: chấm nhiều dòng và lưu CSV.
+
+    Quan trọng:
+    - new_df: chỉ chứa các dòng mới được chấm TRONG LẦN GỌI NÀY.
+    - session_df: toàn bộ lịch sử của session (cũ + mới).
+    - global_csv: chỉ append thêm new_df (tránh nhân bản dữ liệu cũ).
     """
+    # 1. Chấm điểm các dòng mới
     results: List[Dict[str, Any]] = []
     for raw_record in rows:
         score_val, label, explain, _ = _score_with_dataset_or_fallback(raw_record)
         out_record = dict(raw_record)
-        out_record.update({
-            "score": score_val,
-            "qualification_status": label,
-            "explain": explain,
-        })
+        out_record.update(
+            {
+                "score": score_val,
+                "qualification_status": label,
+                "explain": explain,
+            }
+        )
         results.append(out_record)
 
-    df = pd.DataFrame(results)
-    cfg = load_config()
+    # DataFrame chỉ của LẦN GỌI NÀY
+    new_df = pd.DataFrame(results)
 
+    cfg = load_config()
     sessions_dir = getattr(cfg.training, "sessions_dir", "/app/data/sessions")
     global_dir = getattr(cfg.training, "global_dir", "/app/data/global")
     os.makedirs(sessions_dir, exist_ok=True)
     os.makedirs(global_dir, exist_ok=True)
 
+    # 2. Cập nhật file session: prev_df + new_df
     session_csv = os.path.join(sessions_dir, f"{session_id}_scored.csv")
     if os.path.exists(session_csv):
         try:
             prev_df = pd.read_csv(session_csv)
-            df = pd.concat([prev_df, df], ignore_index=True)
+            session_df = pd.concat([prev_df, new_df], ignore_index=True)
         except Exception:
-            pass
-    df.to_csv(session_csv, index=False)
+            # lỗi đọc file cũ -> dùng new_df
+            session_df = new_df.copy()
+    else:
+        session_df = new_df.copy()
+    session_df.to_csv(session_csv, index=False)
 
+    # 3. Cập nhật file global: CHỈ append new_df (tránh trùng)
     global_csv = os.path.join(global_dir, "global_scored.csv")
     if os.path.exists(global_csv):
         try:
             g_df = pd.read_csv(global_csv)
-            g_df = pd.concat([g_df, df], ignore_index=True)
+            g_df = pd.concat([g_df, new_df], ignore_index=True)
         except Exception:
-            g_df = df.copy()
+            g_df = new_df.copy()
     else:
-        g_df = df.copy()
+        g_df = new_df.copy()
     g_df.to_csv(global_csv, index=False)
 
-    preview = df.head(5).to_dict(orient="records")
+    # 4. Preview: chỉ các dòng mới cho lần gọi hiện tại
+    preview = new_df.head(5).to_dict(orient="records")
+
     return {
         "saved_session_csv": session_csv,
         "updated_global_csv": global_csv,
         "rows_scored": len(rows),
         "results_preview": preview,
+        # Nếu muốn debug cả session thì có thể trả thêm:
+        # "session_preview": session_df.tail(5).to_dict(orient="records"),
     }
+
 
 
 def _parse_llm_output(reply: str) -> Tuple[int, str, str]:

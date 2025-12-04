@@ -1,0 +1,2 @@
+source,status,is_vip,no_of_employees,city,score,qualification_status,explain
+,,1,,Hà Nội,80,Qualified,"Dựa vào combo_feature_stats, có 1 combo nghiêng rõ rệt về Qualified với số lượng Qualified là 66, nhiều hơn rõ rệt so với Junk và Unqualified. Vì is_vip = 1 và không có nhiều combo mạnh nghiêng về Junk, nên Qualified là ứng viên chính. Điểm số 80 được chọn do có sự ủng hộ rõ rệt từ combo quan trọng chứa is_vip và city."

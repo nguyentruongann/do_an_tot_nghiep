@@ -1,0 +1,2 @@
+source,status,is_vip,no_of_employees,city,score,qualification_status,explain
+,,1,,Bắc Ninh,80,Qualified,"Dựa trên thông tin lead và thống kê combo_feature_stats, có 1 combo quan trọng với các trường is_vip và city cho thấy số lượng Qualified lớn nhất. Với is_vip = 1 và không có nhiều combo mạnh nghiêng về Junk, nhãn Qualified được xem là ứng viên chính. Do đó, điểm được chấm là 80 dựa trên mức độ chắc chắn cao của combo này."

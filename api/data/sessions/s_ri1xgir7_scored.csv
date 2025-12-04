@@ -1,0 +1,2 @@
+source,status,is_vip,no_of_employees,city,score,qualification_status,explain
+,,1,,Bắc Ninh,80,Qualified,"Dựa trên combo_feature_stats, combo có features là_vip và city có giá trị là 1 và Bắc Ninh có tổng số bản ghi là 96, trong đó có 61 bản ghi được đánh dấu là Qualified. Điều này cho thấy rằng combo này nghiêng rõ rệt về Qualified. Ngoài ra, vì is_vip = 1 và không có nhiều combo mạnh nghiêng về Junk, nên có thể xem Qualified là ứng viên chính. Do đó, nhãn cuối cùng được chọn là Qualified với điểm 80, dựa trên sự ủng hộ rõ rệt của combo quan trọng."
