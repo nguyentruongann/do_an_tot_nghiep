@@ -1,7 +1,7 @@
 import pandas as pd
 
 # Đọc dữ liệu từ file CSV
-file_path = r"D:\HK9\DoAn\ccccccccc\vip_scoring_with_eval_and_docs\api\data\training\data.csv"  # Đường dẫn đến file CSV của bạn
+file_path = r"D:\do_an_tot_nghiep\api\data\training\data.csv"  # Đường dẫn đến file CSV của bạn
 
 # Đọc file CSV
 df = pd.read_csv(file_path)
@@ -18,6 +18,6 @@ print("\nGiá trị sau khi làm tròn 'final_score':")
 print(df[['final_score']].head())  # In ra 5 dòng đầu của cột 'final_score'
 
 # Lưu lại file CSV sau khi đã làm tròn
-df.to_csv(r'D:\HK9\DoAn\ccccccccc\vip_scoring_with_eval_and_docs\api\data\training\data.csv', index=False)  # Đường dẫn lưu file mới
+df.to_csv(r'D:\do_an_tot_nghiep\api\data\training\data.csv', index=False)  # Đường dẫn lưu file mới
 
 print("\nFile đã được lưu thành công.")

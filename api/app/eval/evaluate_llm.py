@@ -62,12 +62,12 @@ class EvalMetrics:
 
 def _resolve_data_path() -> str:
     """Đường dẫn tới CSV train / full data."""
-    return r"D:\HK9\DoAn\ddddd\vip_scoring_with_eval_and_docs\api\data\training\data.csv"
+    return r"D:\do_an_tot_nghiep\api\data\training\data.csv"
 
 
 def _resolve_test_path() -> str:
     """Đường dẫn tới CSV test (100 dòng để evaluation)."""
-    return r"D:\HK9\DoAn\ddddd\vip_scoring_with_eval_and_docs\api\data\training\llm_eval_test_100.csv"
+    return r"D:\do_an_tot_nghiep\api\data\training\llm_eval_test_100.csv"
 
 
 # ============================================================

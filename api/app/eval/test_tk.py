@@ -99,7 +99,7 @@ def test_calculate_statistics_for_row(file_path: str, row_index: int):
     print(json.dumps(total_status_count, ensure_ascii=False, indent=4))
 
 # Đường dẫn tới file CSV của bạn
-file_path = r'D:\HK9\DoAn\ccccccccc\vip_scoring_with_eval_and_docs\api\data\training\data.csv'
+file_path = r'D:\do_an_tot_nghiep\api\data\training\data.csv'
 
 # Chọn dòng mẫu cần kiểm tra (ví dụ: dòng thứ ba)
 row_index = 2  # Bạn có thể thay đổi chỉ số dòng ở đây

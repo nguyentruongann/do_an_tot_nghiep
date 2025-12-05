@@ -11,7 +11,7 @@ services:
     depends_on:
       - redis
     volumes:
-      - D:/HK9/DoAn/ddddd/vip_scoring_with_eval_and_docs/api/data:/app/data  # Mount dữ liệu vào container
+      - D:/do_an_tot_nghiep/api/data:/app/data  # Mount dữ liệu vào container
   redis:
     image: redis:7-alpine
     ports:
